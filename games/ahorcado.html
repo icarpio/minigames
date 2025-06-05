@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Juego del Ahorcado</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    margin: 20px auto;
+    text-align: center;
+  }
+  #word {
+    font-size: 2em;
+    letter-spacing: 10px;
+    margin: 20px 0;
+  }
+  #letters button {
+    margin: 3px;
+    padding: 10px 15px;
+    font-size: 1em;
+  }
+  #message {
+    margin: 15px 0;
+    font-weight: bold;
+  }
+  #score {
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Juego del Ahorcado</h1>
+
+
+
+<div id="game" style="display:none;">
+  <div id="word">_ _ _ _ _</div>
+  <div id="letters"></div>
+  <div id="message"></div>
+  <div id="score">Puntuación: 0</div>
+</div>
+<button id="btnHome" style="
+  background-color: #007bff; /* azul Bootstrap */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 15px;
+" onclick="window.location.href='../home.html'">
+  🏠 
+</button>
+<script type="module">
+  import { saveGameSession } from '../js/api.js';
+
+  const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = 'login.html';
+  }
+
+  const words = ["ELENA", "MARIANO", "AMPARO", "BEATRIZ", "EDU"];
+  let selectedWord = "";
+  let guessedLetters = new Set();
+  let mistakes = 0;
+  const maxMistakes = 6;
+  let score = 0;
+
+  function startGame() {
+    selectedWord = words[Math.floor(Math.random() * words.length)];
+    guessedLetters.clear();
+    mistakes = 0;
+    score = 0;
+    document.getElementById("message").textContent = "";
+    updateWordDisplay();
+    updateScore();
+    createLetterButtons();
+    document.getElementById("game").style.display = "block";
+  }
+
+  function updateWordDisplay() {
+    const display = selectedWord.split("").map(letter => 
+      guessedLetters.has(letter) ? letter : "_"
+    ).join(" ");
+    document.getElementById("word").textContent = display;
+  }
+
+  function createLetterButtons() {
+    const lettersDiv = document.getElementById("letters");
+    lettersDiv.innerHTML = "";
+    for (let i = 65; i <= 90; i++) {
+      const letter = String.fromCharCode(i);
+      const button = document.createElement("button");
+      button.textContent = letter;
+      button.id = "btn_" + letter;
+      button.onclick = () => guessLetter(letter);
+      lettersDiv.appendChild(button);
+    }
+  }
+
+  function guessLetter(letter) {
+    if (guessedLetters.has(letter) || mistakes >= maxMistakes) return;
+
+    document.getElementById("btn_" + letter).disabled = true;
+
+    if (selectedWord.includes(letter)) {
+      guessedLetters.add(letter);
+      score += 10;
+      updateWordDisplay();
+      updateScore();
+      checkWin();
+    } else {
+      mistakes++;
+      score -= 5;
+      updateScore();
+      if (mistakes >= maxMistakes) {
+        endGame(false);
+      }
+    }
+  }
+
+  function updateScore() {
+    document.getElementById("score").textContent = "Puntuación: " + score;
+  }
+
+  function checkWin() {
+    const allGuessed = selectedWord.split("").every(letter => guessedLetters.has(letter));
+    if (allGuessed) {
+      endGame(true);
+    }
+  }
+
+  function endGame(won) {
+  for (let i = 65; i <= 90; i++) {
+    document.getElementById("btn_" + String.fromCharCode(i)).disabled = true;
+  }
+
+  const message = won
+    ? "¡Felicidades! Has ganado."
+    : `Juego terminado. La palabra era: ${selectedWord}`;
+  document.getElementById("message").textContent = message;
+
+  console.log("Intentando guardar puntuación:");
+  console.log("Token:", token);
+  console.log("Puntuación:", score);
+
+  saveGameSession(token, "Ahorcado Game", score)
+    .then(() => alert("Puntuación guardada correctamente!"))
+    .catch(e => {
+      console.error("Error guardando puntuación:", e);
+      alert("Error guardando puntuación: " + e.message);
+      if (e.message.toLowerCase().includes("unauthorized")) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    });
+}
+
+
+  startGame();
+</script>
+
+</body>
+</html>

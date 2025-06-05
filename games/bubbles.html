@@ -1,0 +1,299 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Puzzle Bubble Phaser</title>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+<style>
+  body {
+    margin: 0;
+    background: #112233;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    font-family: Arial, sans-serif;
+    color: white;
+    user-select: none;
+  }
+  #game-container {
+    border: 3px solid #39f;
+    border-radius: 12px;
+    background: #000a1a;
+  }
+  #scoreDisplay {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<div>
+  <div id="game-container"></div>
+  <div id="scoreDisplay">Puntuación: 0</div>
+</div>
+
+<script type="module">
+
+  import { saveGameSession } from '../js/api.js';
+
+  const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = 'login.html';
+  }
+
+  class BubblePuzzle extends Phaser.Scene {
+    constructor() {
+      super({ key: 'BubblePuzzle' });
+      this.score = 0;
+      this.scoreText = null;
+      this.bubbleColors = ['red', 'green', 'blue', 'yellow', 'purple'];
+      this.grid = [];
+      this.gridRows = 10;
+      this.gridCols = 8;
+      this.bubbleRadius = 20;
+      this.launcher = null;
+      this.currentBubble = null;
+      this.isShooting = false;
+      this.speed = 500;
+      this.gameOverFlag = false;
+    }
+
+    preload() {
+      // Carga imágenes simples para las burbujas
+      this.bubbleColors.forEach(color => {
+        this.load.image(color, `https://dummyimage.com/40x40/${color === 'yellow' ? 'ffff00' : color}/000000.png&text=`);
+      });
+      this.load.image('launcher', 'https://i.imgur.com/0nNlVok.png'); // launcher
+    }
+
+    create() {
+      this.score = 0;
+      this.gameOverFlag = false;
+      this.scoreText = document.getElementById('scoreDisplay');
+      this.scoreText.textContent = `Puntuación: ${this.score}`;
+
+      this.grid = [];
+      // Crear grid con algunas burbujas al inicio (3 filas)
+      for (let row = 0; row < this.gridRows; row++) {
+        this.grid[row] = [];
+        for (let col = 0; col < this.gridCols; col++) {
+          if (row < 3) {
+            let color = Phaser.Math.RND.pick(this.bubbleColors);
+            let bubble = this.add.image(this.gridToX(col, row), this.gridToY(row), color);
+            bubble.setData('color', color);
+            bubble.setData('row', row);
+            bubble.setData('col', col);
+            this.grid[row][col] = bubble;
+          } else {
+            this.grid[row][col] = null;
+          }
+        }
+      }
+
+      // Crear lanzador (launcher) abajo en medio
+      this.launcher = this.add.sprite(320, 580, 'launcher').setScale(0.6);
+      this.launcher.setOrigin(0.5, 0.5);
+      this.input.on('pointermove', pointer => {
+        // Rotar launcher para apuntar
+        const angle = Phaser.Math.Angle.Between(this.launcher.x, this.launcher.y, pointer.x, pointer.y);
+        const deg = Phaser.Math.RadToDeg(angle);
+        if (deg > -85 && deg < -95) return; // limita el ángulo
+        if (deg < 0 && deg > -85) this.launcher.setRotation(angle);
+        if (deg < -95 && deg > -180) this.launcher.setRotation(angle);
+      });
+
+      this.input.on('pointerdown', () => {
+        if (!this.isShooting && !this.gameOverFlag) this.shootBubble();
+      });
+
+      // Crear burbuja actual para disparar
+      this.createNextBubble();
+    }
+
+    update() {
+      if (this.currentBubble && this.isShooting) {
+        this.physics.world.wrap(this.currentBubble, 0);
+
+        // Chequear colisiones con paredes
+        if (this.currentBubble.x <= this.bubbleRadius || this.currentBubble.x >= 640 - this.bubbleRadius) {
+          this.currentBubble.body.velocity.x *= -1; // rebote horizontal
+        }
+
+        // Chequear colisiones con burbujas en grid
+        for (let row = 0; row < this.gridRows; row++) {
+          for (let col = 0; col < this.gridCols; col++) {
+            let bubble = this.grid[row][col];
+            if (bubble && Phaser.Math.Distance.Between(this.currentBubble.x, this.currentBubble.y, bubble.x, bubble.y) < this.bubbleRadius * 2) {
+              this.stickBubble(row, col);
+              return;
+            }
+          }
+        }
+
+        // Chequear choque con techo
+        if (this.currentBubble.y <= this.bubbleRadius) {
+          this.stickBubble(0, this.xToCol(this.currentBubble.x));
+        }
+      }
+    }
+
+    createNextBubble() {
+      let color = Phaser.Math.RND.pick(this.bubbleColors);
+      this.currentBubble = this.physics.add.sprite(this.launcher.x, this.launcher.y - 20, color);
+      this.currentBubble.setData('color', color);
+      this.currentBubble.body.setCollideWorldBounds(false);
+      this.currentBubble.body.setAllowGravity(false);
+      this.currentBubble.body.setVelocity(0, 0);
+      this.currentBubble.body.bounce.set(1);
+      this.currentBubble.setCircle(this.bubbleRadius);
+      this.isShooting = false;
+    }
+
+    shootBubble() {
+      this.isShooting = true;
+      let angle = this.launcher.rotation - Math.PI / 2;
+      let velocityX = Math.cos(angle) * this.speed;
+      let velocityY = Math.sin(angle) * this.speed;
+      this.currentBubble.body.setVelocity(velocityX, velocityY);
+    }
+
+    stickBubble(hitRow, hitCol) {
+      // Ajustar posición de la burbuja actual al grid
+      let col = this.xToCol(this.currentBubble.x);
+      let row = hitRow;
+      if (row >= this.gridRows) row = this.gridRows - 1;
+
+      // Si la posición ya tiene burbuja, subir una fila (simple ajuste)
+      if (this.grid[row][col]) {
+        row = Math.max(row - 1, 0);
+      }
+
+      let x = this.gridToX(col, row);
+      let y = this.gridToY(row);
+
+      this.currentBubble.x = x;
+      this.currentBubble.y = y;
+      this.currentBubble.body.setVelocity(0, 0);
+      this.currentBubble.body.moves = false;
+
+      // Guardar en grid
+      this.currentBubble.setData('row', row);
+      this.currentBubble.setData('col', col);
+      this.grid[row][col] = this.currentBubble;
+
+      this.isShooting = false;
+
+      // Revisar grupos de burbujas iguales conectadas
+      const matched = this.findMatches(row, col);
+
+      if (matched.length >= 3) {
+        // Eliminar burbujas del grupo
+        matched.forEach(bubble => {
+          this.grid[bubble.getData('row')][bubble.getData('col')] = null;
+          bubble.destroy();
+          this.score += 10;
+          this.scoreText.textContent = `Puntuación: ${this.score}`;
+        });
+      }
+
+      // Chequear si alguna burbuja bajó mucho (game over)
+      if (this.grid[this.gridRows - 1].some(b => b !== null)) {
+        this.gameOver();
+      } else {
+        this.createNextBubble();
+      }
+    }
+
+    findMatches(row, col) {
+      let targetColor = this.grid[row][col].getData('color');
+      let toCheck = [this.grid[row][col]];
+      let matched = [];
+      let visited = new Set();
+
+      while (toCheck.length > 0) {
+        let bubble = toCheck.pop();
+        let key = bubble.getData('row') + ',' + bubble.getData('col');
+        if (visited.has(key)) continue;
+        visited.add(key);
+        matched.push(bubble);
+
+        // Revisar vecinos (arriba, abajo, izquierda, derecha)
+        const neighbors = this.getNeighbors(bubble.getData('row'), bubble.getData('col'));
+        neighbors.forEach(n => {
+          if (n && n.getData('color') === targetColor && !visited.has(n.getData('row') + ',' + n.getData('col'))) {
+            toCheck.push(n);
+          }
+        });
+      }
+      return matched;
+    }
+
+    getNeighbors(row, col) {
+      const neighbors = [];
+      // Arriba
+      if (row > 0) neighbors.push(this.grid[row - 1][col]);
+      // Abajo
+      if (row < this.gridRows - 1) neighbors.push(this.grid[row + 1][col]);
+      // Izquierda
+      if (col > 0) neighbors.push(this.grid[row][col - 1]);
+      // Derecha
+      if (col < this.gridCols - 1) neighbors.push(this.grid[row][col + 1]);
+      return neighbors;
+    }
+
+    gridToX(col, row) {
+      return 40 + col * this.bubbleRadius * 2 + (row % 2) * this.bubbleRadius;
+    }
+
+    gridToY(row) {
+      return 40 + row * this.bubbleRadius * 1.75;
+    }
+
+    xToCol(x) {
+      return Math.floor((x - 40) / (this.bubbleRadius * 2));
+    }
+
+    async gameOver() {
+      this.gameOverFlag = true;
+      alert(`¡Juego terminado! Tu puntuación: ${this.score}`);
+
+      try {
+        await saveGameSession(token, 'Bubble Puzzle', this.score);
+        console.log('Puntuación guardada correctamente');
+      } catch (e) {
+        alert('Error guardando puntuación: ' + e.message);
+        if (e.message.toLowerCase().includes('unauthorized')) {
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      }
+
+      this.scene.restart();
+    }
+  }
+
+  const config = {
+    type: Phaser.AUTO,
+    width: 640,
+    height: 620,
+    backgroundColor: '#000a1a',
+    physics: {
+      default: 'arcade',
+      arcade: { debug: false }
+    },
+    parent: 'game-container',
+    scene: BubblePuzzle,
+  };
+
+  new Phaser.Game(config);
+
+</script>
+
+</body>
+</html>

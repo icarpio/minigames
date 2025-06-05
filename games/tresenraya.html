@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>3 en Raya - Juego contra CPU</title>
+  <style>
+    /* Reset básico */
+    * {
+      box-sizing: border-box;
+    }
+    body, html {
+      margin: 0; padding: 0;
+      height: 100%;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #fafafa;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 15px;
+      text-align: center;
+      color: #333;
+    }
+    #message {
+      font-size: 1.3rem;
+      margin-bottom: 20px;
+      color: #555;
+      min-height: 1.5em;
+      text-align: center;
+    }
+    #board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 12px;
+      width: 100%;
+      max-width: 360px;
+      margin-bottom: 25px;
+      user-select: none;
+    }
+    .cell {
+      background: #fff;
+      border: 2px solid #444;
+      aspect-ratio: 1 / 1;
+      font-size: clamp(2rem, 5vw, 4rem);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      border-radius: 8px;
+      color: #222;
+      font-weight: 700;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .cell:hover:not(.disabled) {
+      background-color: #e0e0e0;
+    }
+    .cell.disabled {
+      cursor: default;
+      background: #ddd;
+      color: #999;
+      box-shadow: none;
+    }
+    #restartBtn {
+      background-color: #1976d2;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(25, 118, 210, 0.3);
+      transition: background-color 0.3s ease;
+      max-width: 360px;
+      width: 100%;
+    }
+    #restartBtn:hover {
+      background-color: #125ea4;
+    }
+
+    /* Responsive para pantallas pequeñas */
+    @media (max-width: 400px) {
+      #board {
+        max-width: 280px;
+        grid-gap: 8px;
+      }
+      #restartBtn {
+        padding: 10px 18px;
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>3 en Raya contra la Computadora</h1>
+<div id="message">Tu turno</div>
+<div id="board">
+  <div class="cell" data-index="0"></div>
+  <div class="cell" data-index="1"></div>
+  <div class="cell" data-index="2"></div>
+  <div class="cell" data-index="3"></div>
+  <div class="cell" data-index="4"></div>
+  <div class="cell" data-index="5"></div>
+  <div class="cell" data-index="6"></div>
+  <div class="cell" data-index="7"></div>
+  <div class="cell" data-index="8"></div>
+</div>
+<button id="restartBtn">Reiniciar Juego</button>
+<br>
+<button id="btnHome" style="
+  background-color: #007bff; /* azul Bootstrap */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 15px;
+" onclick="window.location.href='../home.html'">
+  🏠 
+</button>
+<script type="module" src="../js/tictactoe.js"></script>
+</body>
+</html>

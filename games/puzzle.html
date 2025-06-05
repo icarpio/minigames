@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>15 Puzzle con imágenes</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    text-align: center;
+    background: #f0f0f0;
+  }
+  #puzzle {
+    margin: 0 auto;
+    width: 400px;
+    height: 400px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 2px;
+    border: 3px solid #333;
+    background: #222;
+  }
+  .tile {
+    width: 100%;
+    height: 100%;
+    background-size: 400px 400px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+  }
+  .empty {
+    background: #222;
+    cursor: default;
+  }
+  #moves {
+    margin-top: 20px;
+    font-size: 1.2rem;
+  }
+  #btnRestart {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>15 Puzzle - Juego de Puzzle Deslizante</h1>
+<div id="puzzle"></div>
+<div id="moves">Movimientos: 0</div>
+<button id="btnRestart">Reiniciar</button>
+
+<script type="module">
+
+  import { saveGameSession } from '../js/api.js';
+
+  const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = 'login.html';
+  }
+
+  const puzzleContainer = document.getElementById('puzzle');
+  const movesDisplay = document.getElementById('moves');
+  const btnRestart = document.getElementById('btnRestart');
+
+  const size = 4; // 4x4 puzzle
+  const totalTiles = size * size;
+  let tiles = []; // Array con orden actual (indices de las piezas)
+  let emptyIndex = totalTiles - 1; // Última pieza es espacio vacío
+  let moves = 0;
+
+  // Carga imágenes disponibles
+  const images = [
+    'assets/img/img1.jpg',
+    'assets/img/img2.jpg',
+    'assets/img/img3.jpg',
+    'assets/img/img4.jpg',
+    'assets/img/img5.jpg',
+    'assets/img/img6.jpg',
+    'assets/img/img7.jpg'
+  ];
+
+  // Elige imagen aleatoria
+  const chosenImage = images[Math.floor(Math.random() * images.length)];
+
+  // Inicializa el puzzle
+  function initPuzzle() {
+    // Orden original: 0..15
+    tiles = [...Array(totalTiles).keys()];
+    emptyIndex = totalTiles - 1; // Última es vacía
+    moves = 0;
+    movesDisplay.textContent = `Movimientos: ${moves}`;
+
+    createTiles();
+    shuffleTiles();
+    renderTiles();
+  }
+
+  // Crea los divs con background para cada pieza
+  function createTiles() {
+    puzzleContainer.innerHTML = '';
+    for (let i = 0; i < totalTiles; i++) {
+      const tile = document.createElement('div');
+      tile.classList.add('tile');
+      tile.style.backgroundImage = `url(${chosenImage})`;
+      tile.style.backgroundPosition = getBgPosition(i);
+      if (i === emptyIndex) {
+        tile.classList.add('empty');
+      }
+      tile.dataset.index = i;
+      tile.addEventListener('click', () => onTileClick(i));
+      puzzleContainer.appendChild(tile);
+    }
+  }
+
+  // Retorna la posición CSS background-position según el índice
+  function getBgPosition(index) {
+    const row = Math.floor(index / size);
+    const col = index % size;
+    return `${-col * 100}px ${-row * 100}px`;
+  }
+
+  // Mezcla las piezas asegurando que el puzzle sea resoluble
+  function shuffleTiles() {
+    // Usamos Fisher-Yates shuffle
+    do {
+      for (let i = tiles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+      }
+    } while (!isSolvable() || isSolved());
+    emptyIndex = tiles.indexOf(totalTiles - 1);
+  }
+
+  // Comprueba si el puzzle está resuelto
+  function isSolved() {
+    for (let i = 0; i < totalTiles; i++) {
+      if (tiles[i] !== i) return false;
+    }
+    return true;
+  }
+
+  // Comprueba si el puzzle es resoluble según regla del 15 puzzle
+  function isSolvable() {
+    let invCount = 0;
+    for (let i = 0; i < totalTiles - 1; i++) {
+      for (let j = i + 1; j < totalTiles; j++) {
+        if (tiles[i] !== totalTiles - 1 && tiles[j] !== totalTiles - 1 && tiles[i] > tiles[j]) {
+          invCount++;
+        }
+      }
+    }
+    const emptyRowFromBottom = size - Math.floor(emptyIndex / size);
+    if (size % 2 === 1) {
+      // Si ancho impar, inversions par es solucionable
+      return invCount % 2 === 0;
+    } else {
+      // Si ancho par, depende de fila vacía
+      if (emptyRowFromBottom % 2 === 0) {
+        return invCount % 2 === 1;
+      } else {
+        return invCount % 2 === 0;
+      }
+    }
+  }
+
+  // Renderiza las piezas según el array tiles
+  function renderTiles() {
+    const children = puzzleContainer.children;
+    for (let i = 0; i < totalTiles; i++) {
+      const tileNum = tiles[i];
+      const tile = children[i];
+      if (tileNum === totalTiles - 1) {
+        tile.classList.add('empty');
+        tile.style.backgroundPosition = '';
+        tile.style.backgroundImage = 'none';
+        tile.style.cursor = 'default';
+      } else {
+        tile.classList.remove('empty');
+        tile.style.backgroundImage = `url(${chosenImage})`;
+        tile.style.backgroundPosition = getBgPosition(tileNum);
+        tile.style.cursor = 'pointer';
+      }
+    }
+  }
+
+  // Cuando el usuario hace click en una pieza
+  function onTileClick(clickedIndex) {
+    if (canMove(clickedIndex)) {
+      swapTiles(clickedIndex, emptyIndex);
+      emptyIndex = clickedIndex;
+      moves++;
+      movesDisplay.textContent = `Movimientos: ${moves}`;
+      renderTiles();
+
+      if (isSolved()) {
+        setTimeout(() => {
+          alert(`¡Felicidades! Has completado el puzzle en ${moves} movimientos.`);
+          saveScore();
+        }, 200);
+      }
+    }
+  }
+
+  // Comprueba si la pieza clickeada es adyacente al espacio vacío
+  function canMove(index) {
+    const rowClicked = Math.floor(index / size);
+    const colClicked = index % size;
+    const rowEmpty = Math.floor(emptyIndex / size);
+    const colEmpty = emptyIndex % size;
+
+    // Se puede mover si está al lado (arriba, abajo, izquierda, derecha)
+    return (rowClicked === rowEmpty && Math.abs(colClicked - colEmpty) === 1) ||
+           (colClicked === colEmpty && Math.abs(rowClicked - rowEmpty) === 1);
+  }
+
+  // Intercambia dos piezas en el array tiles
+  function swapTiles(i, j) {
+    [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
+  }
+
+  // Guarda la puntuación usando tu función importada
+  async function saveScore() {
+    try {
+      await saveGameSession(token, '15 Puzzle', moves);
+      console.log('Puntuación guardada:', moves);
+    } catch (e) {
+      alert('Error guardando puntuación: ' + e.message);
+      if (e.message.toLowerCase().includes('unauthorized')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    }
+  }
+
+  btnRestart.addEventListener('click', () => {
+    initPuzzle();
+  });
+
+  // Iniciar
+  initPuzzle();
+
+</script>
+</body>
+</html>

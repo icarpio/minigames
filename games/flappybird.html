@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Flappy Bird Phaser 3 con guardado</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: #70c5ce;
+    }
+    #game-container {
+      margin: auto;
+      width: 480px;
+      height: 640px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script type="module">
+    import { saveGameSession } from '../js/api.js';
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 480,
+      height: 640,
+      parent: 'game-container',
+      physics: {
+        default: 'arcade',
+        arcade: {
+          gravity: { y: 800 },
+          debug: false
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let bird;
+    let pipes;
+    let score = 0;
+    let scoreText;
+    let gameOver = false;
+    let token = (localStorage.getItem('token') || '').trim();
+
+    if (!token) {
+      alert('No has iniciado sesión. Serás redirigido al login.');
+      window.location.href = 'login.html';
+    }
+
+    function preload() {
+      this.load.image('bird', 'https://i.imgur.com/sM0vseF.png');
+      this.load.image('pipe', 'https://i.imgur.com/5QfP6Nv.png');
+      this.load.image('background', 'https://i.imgur.com/rk1Z8qS.png');
+    }
+
+    function create() {
+      this.add.tileSprite(0, 0, config.width, config.height, 'background').setOrigin(0);
+
+      bird = this.physics.add.sprite(100, 320, 'bird').setScale(0.5);
+      bird.setCollideWorldBounds(true);
+
+      pipes = this.physics.add.group();
+
+      score = 0;
+      scoreText = this.add.text(10, 10, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
+
+      this.input.on('pointerdown', flap, this);
+      this.input.keyboard.on('keydown-SPACE', flap, this);
+
+      this.time.addEvent({
+        delay: 1500,
+        callback: addPipeRow,
+        callbackScope: this,
+        loop: true
+      });
+
+      this.physics.add.collider(bird, pipes, hitPipe, null, this);
+    }
+
+    function update() {
+      if (gameOver) {
+        bird.setTint(0xff0000);
+        bird.setVelocity(0);
+        return;
+      }
+      if (bird.angle < 20) {
+        bird.angle += 1;
+      }
+    }
+
+    function flap() {
+      if (gameOver) return;
+      bird.setVelocityY(-300);
+      bird.angle = -15;
+    }
+
+    function addPipeRow() {
+      const gap = Phaser.Math.Between(100, 150);
+      const pipeHole = Phaser.Math.Between(1, 4);
+      const pipeHeight = 320;
+      const pipeWidth = 52;
+
+      // Crear tuberías arriba y abajo con espacio para que pase el pájaro
+      for (let i = 0; i < 6; i++) {
+        if (i !== pipeHole && i !== pipeHole + 1) {
+          let pipeY = i * pipeHeight / 2;
+          let pipe = pipes.create(config.width + pipeWidth, pipeY, 'pipe');
+          pipe.setOrigin(0, 1);
+          pipe.body.allowGravity = false;
+          pipe.setVelocityX(-200);
+          pipe.checkWorldBounds = true;
+          pipe.outOfBoundsKill = true;
+          pipe.body.immovable = true;
+        }
+      }
+
+      // Incrementar puntuación cada vez que se añade una fila de tubos
+      if (!gameOver) {
+        score++;
+        scoreText.setText('Puntos: ' + score);
+      }
+    }
+
+    function hitPipe() {
+      if (gameOver) return;
+      gameOver = true;
+      saveScore();
+    }
+
+    async function saveScore() {
+      try {
+        await saveGameSession(token, 'Flappy Bird', score * 10);
+        alert('Puntuación guardada: ' + (score * 10));
+      } catch (e) {
+        alert('Error guardando puntuación: ' + e.message);
+        if (e.message.toLowerCase().includes('unauthorized')) {
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

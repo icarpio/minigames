@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8">
+        <title>Juego de Memoria</title>
+        <link rel="stylesheet" href="../css/styles.css">
+    </head>
+    <body> 
+        <main>     
+            <section class="section01">
+                <h1>Juego de Memoria</h1>
+                <table>
+                    <tr>
+                        <td><button id="0" onclick="spin(0)"></button></td>
+                        <td><button id="1" onclick="spin(1)"></button></td>
+                        <td><button id="2" onclick="spin(2)"></button></td>
+                        <td><button id="3" onclick="spin(3)"></button></td>
+                    </tr>
+                    <tr>
+                        <td><button id="4" onclick="spin(4)"></button></td>
+                        <td><button id="5" onclick="spin(5)"></button></td>
+                        <td><button id="6" onclick="spin(6)"></button></td>
+                        <td><button id="7" onclick="spin(7)"></button></td>
+                    </tr>
+                    <tr>
+                        <td><button id="8" onclick="spin(8)"></button></td>
+                        <td><button id="9" onclick="spin(9)"></button></td>
+                        <td><button id="10" onclick="spin(10)"></button></td>
+                        <td><button id="11" onclick="spin(11)"></button></td>
+                    </tr>
+                    <tr>
+                        <td><button id="12" onclick="spin(12)"></button></td>
+                        <td><button id="13" onclick="spin(13)"></button></td>
+                        <td><button id="14" onclick="spin(14)"></button></td>
+                        <td><button id="15" onclick="spin(15)"></button></td>
+                    </tr>
+                </table>
+            </section>
+             <section class="section02">
+				<div class="stats-container">
+					<h4 id="successes" class="stats">Número de aciertos: 0</h4>
+					<h4 id="time" class="stats">Tiempo restante: 50 seg</h4>
+				</div>
+                <div class="restart-container">
+                <div onclick="restartGame()" class="restart-btn">Reiniciar Juego</div>
+                <div id="btnHome" class="restart-btn" onclick="window.location.href='../home.html'">🏠</div >
+                </div>
+				</div>
+			</section>
+        </main>
+        <footer>
+            <h6>Juego de Memoria creado con HTML y CSS.</h6>
+            <script type="module" src="../js/memoryscript.js"></script>
+        </footer>         
+    </body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mis sesiones de juego</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    #loading { font-style: italic; }
+    #pagination { margin-top: 20px; }
+    button { padding: 6px 12px; margin: 0 5px; }
+  </style>
+</head>
+<body>
+  <h1>Mis Sesiones de Juego</h1>
+  <div id="loading">Cargando sesiones...</div>
+  <div id="no-sessions" style="display:none;">No has jugado ninguna sesión aún.</div>
+
+  <table id="sessions-table" style="display:none;">
+    <thead>
+      <tr>
+        <th>Juego</th>
+        <th>Puntaje</th>
+        <th>Fecha</th>
+      </tr>
+    </thead>
+    <tbody id="sessions-body"></tbody>
+  </table>
+
+  <div id="pagination" style="display:none;">
+    <button id="prev-btn" disabled>Anterior</button>
+    <button id="next-btn" disabled>Siguiente</button>
+    <button id="home-btn">Menu</button>
+  </div>
+
+  <script>
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('No estás autenticado. Por favor inicia sesión.');
+    window.location.href = 'home.html'; // o tu página de login
+  }
+
+  let nextPageUrl = null;
+  let prevPageUrl = null;
+
+  const loadingDiv = document.getElementById('loading');
+  const noSessionsDiv = document.getElementById('no-sessions');
+  const table = document.getElementById('sessions-table');
+  const tbody = document.getElementById('sessions-body');
+  const paginationDiv = document.getElementById('pagination');
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const homeBtn = document.getElementById('home-btn');
+
+  function formatFecha(fechaStr) {
+    const fecha = new Date(fechaStr);
+    const dia = String(fecha.getDate()).padStart(2, '0');
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const anio = fecha.getFullYear();
+    const horas = String(fecha.getHours()).padStart(2, '0');
+    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+    return `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+  }
+
+  function fetchSessions(url) {
+    loadingDiv.style.display = 'block';
+    noSessionsDiv.style.display = 'none';
+    table.style.display = 'none';
+    paginationDiv.style.display = 'none';
+
+    fetch(url, {
+      headers: {
+        'Authorization': 'Token ' + token
+      }
+    })
+    .then(response => {
+      if (!response.ok) throw new Error('Error al cargar sesiones');
+      return response.json();
+    })
+    .then(data => {
+      loadingDiv.style.display = 'none';
+
+      nextPageUrl = data.next;
+      prevPageUrl = data.previous;
+
+      if (data.results.length === 0) {
+        noSessionsDiv.style.display = 'block';
+        paginationDiv.style.display = 'none';
+        return;
+      }
+
+      tbody.innerHTML = ''; // limpiar tabla
+      data.results.forEach(session => {
+        const tr = document.createElement('tr');
+
+        const tdGame = document.createElement('td');
+        tdGame.textContent = session.game;
+        tr.appendChild(tdGame);
+
+        const tdScore = document.createElement('td');
+        tdScore.textContent = session.score;
+        tr.appendChild(tdScore);
+
+        const tdDate = document.createElement('td');
+        tdDate.textContent = formatFecha(session.played_at);
+        tr.appendChild(tdDate);
+
+        tbody.appendChild(tr);
+      });
+
+      table.style.display = 'table';
+      paginationDiv.style.display = 'block';
+
+      prevBtn.disabled = !prevPageUrl;
+      nextBtn.disabled = !nextPageUrl;
+    })
+    .catch(error => {
+      loadingDiv.textContent = 'No se pudieron cargar las sesiones.';
+      console.error(error);
+    });
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if (prevPageUrl) {
+      fetchSessions(prevPageUrl);
+    }
+  });
+
+  nextBtn.addEventListener('click', () => {
+    if (nextPageUrl) {
+      fetchSessions(nextPageUrl);
+    }
+  });
+
+  homeBtn.addEventListener('click', () => {
+  window.location.href = '/home.html';
+});
+
+  // Cargar la primera página al cargar el script
+  fetchSessions('http://localhost:8000/api/minigames/sessions/?page=1&page_size=10');
+</script>
+
+</body>
+</html>

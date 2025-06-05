@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simon Game con Phaser</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background-color: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      height: 100vh;
+      color: #eee;
+      font-family: Arial, sans-serif;
+    }
+
+    #game-container {
+      border: 4px solid #4caf50;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #4caf50;
+      max-width: 100vw;
+      max-height: 80vh;
+    }
+
+    #scoreDisplay {
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.5rem;
+      color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+
+  <div>
+    <div id="game-container"></div>
+    <div id="scoreDisplay">Puntuación: 0</div>
+  </div>
+
+  <script type="module">
+    import { saveGameSession } from '../js/api.js';
+
+    const token = (localStorage.getItem('token') || '').trim();
+    if (!token) {
+      alert('No has iniciado sesión. Serás redirigido al login.');
+      window.location.href = 'login.html';
+    }
+
+    class SimonGame extends Phaser.Scene {
+      constructor() {
+        super({ key: 'SimonGame' });
+        this.sequence = [];
+        this.playerSequence = [];
+        this.level = 0;
+        this.score = 0;
+        this.buttons = [];
+        this.isPlayerTurn = false;
+      }
+
+      preload() {
+        this.load.image('green', '../assets/img/green.png');
+        this.load.image('red', '../assets/img/red.png');
+        this.load.image('yellow', '../assets/img/yellow.png');
+        this.load.image('blue', '../assets/img/blue.png');
+      }
+
+      create() {
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+        const size = this.scale.width / 4;
+
+        const colors = ['green', 'red', 'yellow', 'blue'];
+        const positions = [
+          { x: centerX - size, y: centerY - size },
+          { x: centerX + size, y: centerY - size },
+          { x: centerX - size, y: centerY + size },
+          { x: centerX + size, y: centerY + size },
+        ];
+
+        for (let i = 0; i < 4; i++) {
+        const btn = this.add.image(positions[i].x, positions[i].y, colors[i]).setInteractive();
+        btn.setDisplaySize(size, size);
+        btn.setScale(0.5);  // Aquí la escala inicial
+        btn.colorName = colors[i];
+        btn.on('pointerdown', () => this.handlePlayerInput(btn));
+        this.buttons.push(btn);
+      }
+
+        this.scoreText = document.getElementById('scoreDisplay');
+        this.startGame();
+      }
+
+      startGame() {
+        this.sequence = [];
+        this.playerSequence = [];
+        this.level = 0;
+        this.score = 0;
+        this.scoreText.textContent = `Puntuación: ${this.score}`;
+        this.nextLevel();
+      }
+
+      nextLevel() {
+        this.level++;
+        this.playerSequence = [];
+        this.sequence.push(Phaser.Math.Between(0, 3));
+        this.isPlayerTurn = false;
+        this.playSequence();
+      }
+
+      async playSequence() {
+        for (let index of this.sequence) {
+          await this.highlightButton(this.buttons[index]);
+          await this.sleep(300);
+        }
+        this.isPlayerTurn = true;
+      }
+
+      highlightButton(button) {
+  return new Promise((resolve) => {
+    this.tweens.add({
+      targets: button,
+      scale: 0.2,      // agranda solo un 10%
+      tint: 0xffffaa,
+      duration: 200,   // un poco más rápido
+      ease: 'Linear',
+      onComplete: () => {
+        this.tweens.add({
+          targets: button,
+          scale:0.5,      // vuelve a tamaño original
+          tint: 0xffffff,
+          duration: 200,
+          ease: 'Linear',
+          onComplete: () => {
+            button.clearTint();
+            resolve();
+          }
+        });
+      }
+    });
+  });
+}
+
+
+
+
+      handlePlayerInput(button) {
+        if (!this.isPlayerTurn) return;
+        this.playerSequence.push(this.buttons.indexOf(button));
+        this.highlightButton(button);
+
+        const currentIndex = this.playerSequence.length - 1;
+        if (this.playerSequence[currentIndex] !== this.sequence[currentIndex]) {
+          this.isPlayerTurn = false;
+          this.gameOver();
+          return;
+        }
+
+        if (this.playerSequence.length === this.sequence.length) {
+          this.score += this.level * 10;
+          this.scoreText.textContent = `Puntuación: ${this.score}`;
+          this.isPlayerTurn = false;
+          this.time.delayedCall(1000, () => this.nextLevel());
+        }
+      }
+
+      async gameOver() {
+        alert(`Juego terminado! Tu puntuación fue: ${this.score}`);
+        try {
+          await saveGameSession(token, 'Simon Game', this.score);
+          console.log(`Puntos guardados: ${this.score}`)
+        } catch (e) {
+          alert('Error guardando puntuación: ' + e.message);
+          if (e.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = '/index.html';
+          }
+        }
+        this.startGame();
+      }
+
+      sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+    }
+
+    // Tamaño dinámico responsivo
+    function getResponsiveSize() {
+      const min = Math.min(window.innerWidth, window.innerHeight * 0.8);
+      return Math.floor(min);
+    }
+
+    let game;
+
+    function launchGame() {
+      const size = getResponsiveSize();
+
+      const config = {
+        type: Phaser.AUTO,
+        parent: 'game-container',
+        width: size,
+        height: size,
+        backgroundColor: '#111',
+        scene: SimonGame,
+      };
+
+      if (game) {
+        game.destroy(true);
+      }
+
+      game = new Phaser.Game(config);
+    }
+
+    window.addEventListener('resize', () => {
+      launchGame();
+    });
+
+    launchGame();
+  </script>
+</body>
+</html>

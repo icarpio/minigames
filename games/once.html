@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rasca y Gana ONCE</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 400px;
+    margin: 30px auto;
+    text-align: center;
+    background: #f9f9f9;
+    color: #333;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .cell {
+    width: 80px;
+    height: 80px;
+    background-color: #bbb;
+    border-radius: 8px;
+    font-size: 3em;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background-color 0.3s ease;
+  }
+  .cell:hover:not(.revealed) {
+    background-color: #999;
+  }
+  .cell.revealed {
+    background-color: #fff;
+    cursor: default;
+    animation: fadeZoomIn 0.4s ease forwards;
+  }
+  @keyframes fadeZoomIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  #message {
+    margin: 20px 0;
+    font-weight: bold;
+    font-size: 1.2em;
+    min-height: 2.5em;
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+  #message.show {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  #score {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #1e7e34;
+  }
+  
+  button {
+    padding: px 9px;
+    font-size: 1em;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+</style>
+</head>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Rasca y Gana ONCE</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 400px;
+    margin: 30px auto;
+    text-align: center;
+    background: #f9f9f9;
+    color: #333;
+  }
+  #board {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    grid-gap: 10px;
+    justify-content: center;
+    margin: 20px 0;
+  }
+  .cell {
+    width: 80px;
+    height: 80px;
+    background-color: #bbb;
+    border-radius: 8px;
+    font-size: 3em;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+    transition: background-color 0.3s ease;
+  }
+  .cell:hover:not(.revealed) {
+    background-color: #999;
+  }
+  .cell.revealed {
+    background-color: #fff;
+    cursor: default;
+    animation: fadeZoomIn 0.4s ease forwards;
+  }
+  @keyframes fadeZoomIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  #message {
+    margin: 20px 0;
+    font-weight: bold;
+    font-size: 1.2em;
+    min-height: 2.5em;
+    opacity: 0;
+    animation-fill-mode: forwards;
+  }
+  #message.show {
+    animation: fadeInUp 0.6s ease forwards;
+  }
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  #score {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #1e7e34;
+  }
+  button {
+    padding: 2px 16px;
+    font-size: 1em;
+    border: none;
+    border-radius: 6px;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 5px;
+  }
+  button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+  }
+  button:hover:not(:disabled) {
+    background-color: #0056b3;
+  }
+  #gameSelection {
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+<h1>Rasca y Gana ONCE</h1>
+
+  <div id="gameSelection">
+    <p>Elige tu juego:</p>
+    <button id="game1Btn">Rasca Símbolos</button>
+    <button id="game2Btn">7 y ½</button> 
+    <button id="game3Btn">Flower power</button>
+  </div>
+
+  <div id="game" style="display:none;">
+    <div id="board"></div>
+    <div id="message"></div>
+    <div id="score">Puntuación: 0</div>
+    <button id="restartBtn" style="display:none;">Jugar de nuevo</button>
+    <button id="backBtn" style="display:none; background:#6c757d;">Volver a selección</button>
+  </div>
+
+  <button id="btnHome" style="
+  background-color: #007bff; /* azul Bootstrap */
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-bottom: 15px;
+" onclick="window.location.href='../home.html'">
+  🏠 
+</button>
+
+  <script type="module">
+    import { saveGameSession } from '../js/api.js'; // ajusta según donde tengas api.js
+
+    const symbols = ["⭐", "🍀", "💎", "🎲", "🍒", "🔔"];
+    const symbolScores = {
+      "⭐": 10,
+      "🍀": 20,
+      "💎": 50,
+      "🎲": 100,
+      "🍒": 150,
+      "🔔": 200
+    };
+
+    let score = 0;
+    let boardSymbols = [];
+    let revealedCount = 0;
+    let currentGame = null;
+
+    const token = (localStorage.getItem('token') || '').trim();
+    if (!token) {
+      alert('No has iniciado sesión. Serás redirigido al login.');
+      window.location.href = 'login.html';
+    }
+
+    const gameSelectionDiv = document.getElementById("gameSelection");
+    const gameDiv = document.getElementById("game");
+    const boardDiv = document.getElementById("board");
+    const messageDiv = document.getElementById("message");
+    const scoreDiv = document.getElementById("score");
+    const restartBtn = document.getElementById("restartBtn");
+    const backBtn = document.getElementById("backBtn");
+    const game1Btn = document.getElementById("game1Btn");
+    const game2Btn = document.getElementById("game2Btn");
+    const game3Btn = document.getElementById("game3Btn");
+
+    function sendScore(gameName, scoreValue) {
+      saveGameSession(token, gameName, scoreValue)
+        .then(() => alert(`Puntuación guardada:\nJuego: ${gameName}\nPuntos: ${scoreValue}`))
+        .catch(e => {
+          alert('Error guardando puntuación: ' + e.message);
+          if (e.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+          }
+        });
+    }
+
+    game1Btn.addEventListener("click", () => {
+      currentGame = "game1";
+      gameSelectionDiv.style.display = "none";
+      gameDiv.style.display = "block";
+      startGame1();
+    });
+
+    game2Btn.addEventListener("click", () => {
+      currentGame = "game2";
+      gameSelectionDiv.style.display = "none";
+      gameDiv.style.display = "block";
+      startGame2();
+    });
+
+    game3Btn.addEventListener("click", () => {
+      currentGame = "game3";
+      gameSelectionDiv.style.display = "none";
+      gameDiv.style.display = "block";
+      startGame3();
+    });
+
+    backBtn.addEventListener("click", () => {
+      gameDiv.style.display = "none";
+      gameSelectionDiv.style.display = "block";
+      restartBtn.style.display = "none";
+      backBtn.style.display = "none";
+      messageDiv.textContent = "";
+      scoreDiv.textContent = "Puntuación: 0";
+      boardDiv.innerHTML = "";
+    });
+
+    restartBtn.addEventListener("click", () => {
+      if (currentGame === "game1") startGame1();
+      else if (currentGame === "game2")startGame2();
+      else if (currentGame === "game3") startGame3();
+    });
+
+    function startGame1() {
+      score = 0;
+      revealedCount = 0;
+      messageDiv.textContent = "";
+      messageDiv.classList.remove("show");
+      scoreDiv.textContent = "Puntuación: 0";
+      restartBtn.style.display = "none";
+      backBtn.style.display = "inline-block";
+      boardDiv.innerHTML = "";
+      boardDiv.style.gridTemplateColumns = "repeat(3, 80px)";
+      boardSymbols = generateBoardSymbols(9);
+
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement("div");
+        cell.classList.add("cell");
+        cell.dataset.index = i;
+        cell.textContent = "";
+        cell.style.cursor = "pointer";
+        cell.style.border = "1px solid #ccc";
+        cell.style.display = "flex";
+        cell.style.alignItems = "center";
+        cell.style.justifyContent = "center";
+        cell.style.fontSize = "2rem";
+        cell.style.userSelect = "none";
+        cell.style.height = "80px";
+        cell.addEventListener("click", () => revealCell1(cell));
+        boardDiv.appendChild(cell);
+      }
+    }
+
+    function generateBoardSymbols(count) {
+      let arr = [];
+      for (let i = 0; i < count; i++) {
+        const randomSymbol = symbols[Math.floor(Math.random() * symbols.length)];
+        arr.push(randomSymbol);
+      }
+      return arr;
+    }
+
+    function revealCell1(cell) {
+      if (cell.classList.contains("revealed")) return;
+      const idx = cell.dataset.index;
+      cell.textContent = boardSymbols[idx];
+      cell.classList.add("revealed");
+      revealedCount++;
+
+      if (revealedCount === boardSymbols.length) {
+        checkWin1();
+      }
+    }
+
+    function checkWin1() {
+      const counts = {};
+      boardSymbols.forEach(s => {
+        counts[s] = (counts[s] || 0) + 1;
+      });
+
+      let totalScore = 0;
+      let winningSymbols = [];
+
+      for (const sym in counts) {
+        if (counts[sym] >= 3) {
+          const comboScore = symbolScores[sym] * counts[sym];
+          totalScore += comboScore;
+          winningSymbols.push(`${counts[sym]} símbolos "${sym}" (${comboScore} puntos)`);
+        }
+      }
+
+      if (winningSymbols.length > 0) {
+        score = totalScore;
+        messageDiv.textContent = `¡Felicidades! Encontraste: ${winningSymbols.join(", ")}. Total: ${score} puntos.`;
+      } else {
+        score = 0;
+        messageDiv.textContent = "No hubo combinaciones ganadoras. ¡Intenta de nuevo!";
+      }
+
+      scoreDiv.textContent = `Puntuación: ${score}`;
+      restartBtn.style.display = "inline-block";
+      messageDiv.classList.add("show");
+
+      sendScore("Rasca y Gana", score);
+    }
+
+// -------- Juego 2: 7 y ½ --------
+
+const cards = [
+  { name: "1", value: 1 }, { name: "2", value: 2 }, { name: "3", value: 3 },
+  { name: "4", value: 4 }, { name: "5", value: 5 }, { name: "6", value: 6 },
+  { name: "7", value: 7 }, { name: "8", value: 8 }, { name: "9", value: 9 },
+
+];
+
+let game2Score = 0;
+let game2Revealed = 0;
+let game2Over = false;
+let topSum = 0;
+let bottomSum = 0;
+
+function startGame2() {
+  game2Score = 0;
+  game2Revealed = 0;
+  game2Over = false;
+  topSum = 0;
+  bottomSum = 0;
+
+  messageDiv.textContent = "Desvela las 3 cartas de abajo. Si superas la suma de arriba, ganas 400 puntos.";
+  messageDiv.classList.add("show");
+  scoreDiv.textContent = `Suma inferior: 0`;
+  restartBtn.style.display = "none";
+  if (backBtn) backBtn.style.display = "inline-block";
+
+  boardDiv.innerHTML = "";
+  boardDiv.style.gridTemplateColumns = "repeat(3, 60px)";
+
+  // Barajar y coger 6 cartas
+  boardSymbols = shuffle([...cards]).slice(0, 6);
+
+  // Crear casillas (3 arriba reveladas, 3 abajo tapadas)
+  for (let i = 0; i < 6; i++) {
+    const cell = document.createElement("div");
+    cell.classList.add("cell");
+    cell.dataset.index = i;
+    cell.style.fontSize = "1.5em";
+
+    if (i < 3) {
+      // Arriba reveladas
+      cell.textContent = boardSymbols[i].name;
+      cell.classList.add("revealed");
+      topSum += boardSymbols[i].value;
+    } else {
+      // Abajo tapadas
+      cell.textContent = "";
+      cell.addEventListener("click", () => revealCard(cell));
+    }
+
+    boardDiv.appendChild(cell);
+  }
+
+  // Mostrar suma de arriba
+  const topDiv = document.createElement("div");
+  topDiv.textContent = `Suma superior: ${topSum.toFixed(1)}`;
+  topDiv.style.gridColumn = "span 3";
+  boardDiv.insertBefore(topDiv, boardDiv.children[3]);
+}
+
+function revealCard(cell) {
+  if (cell.classList.contains("revealed") || game2Over) return;
+
+  const idx = parseInt(cell.dataset.index);
+  const card = boardSymbols[idx];
+
+  cell.textContent = card.name;
+  cell.classList.add("revealed");
+
+  bottomSum += card.value;
+  game2Revealed++;
+  scoreDiv.textContent = `Suma inferior: ${bottomSum.toFixed(1)}`;
+
+  if (game2Revealed === 3) {
+    game2Over = true;
+    let resultMsg = `Juego terminado.`;
+    if (bottomSum > topSum) {
+      resultMsg += ` ¡Ganaste 400 puntos!`;
+      score = 400;
+    } else {
+      resultMsg += ` ¡Has perdido 400 puntos!`;
+      score = 0;
+    }
+    messageDiv.textContent = resultMsg;
+    sendScore("Comparación de sumas", score);
+    restartBtn.style.display = "inline-block";
+  }
+}
+
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// -------- Juego 3: Plower power --------
+
+
+
+function disableAllCells() {
+  const cells = boardDiv.querySelectorAll(".cell");
+  cells.forEach(c => c.removeEventListener("click", () => {}));
+  cells.forEach(c => c.classList.add("revealed"));
+}
+
+const game3Symbols = [
+  { type: "flower", symbol: "🌸" },
+  { type: "flower", symbol: "🌺" },
+  { type: "flower", symbol: "🌻" },
+  { type: "flower", symbol: "🌼" },  // nueva flor
+  { type: "prize", symbol: "💰" },
+  { type: "prize", symbol: "🎁" },
+  { type: "prize", symbol: "⭐" },
+  { type: "prize", symbol: "🏆" }   // nuevo premio
+];
+const game3GridSize = 12;
+
+const game3Points = {
+  "🌸": 50,
+  "🌺": 50,
+  "🌻": 50,
+  "🌼": 50,
+  "💰": 100,
+  "🎁": 150,
+  "⭐": 200,
+  "🏆": 250
+};
+
+let game3CellsData = [];
+let game3ScratchedCount = 0;
+let game3Active = false;
+
+function generateGame3Data() {
+  const flowers = game3Symbols.filter(s => s.type === "flower");
+  const fixedFlower = flowers[Math.floor(Math.random() * flowers.length)];
+  let arr = [];
+
+  // Asegurar al menos 3 flores iguales
+  for (let i = 0; i < 3; i++) arr.push(fixedFlower);
+
+  while (arr.length < game3GridSize) {
+    const randomSym = game3Symbols[Math.floor(Math.random() * game3Symbols.length)];
+    arr.push(randomSym);
+  }
+
+  return shuffle(arr);
+}
+
+function startGame3() {
+  game3Active = true;
+  game3ScratchedCount = 0;
+  game3CellsData = generateGame3Data();
+  boardDiv.innerHTML = "";
+  messageDiv.textContent = "";
+  messageDiv.classList.remove("show");
+  scoreDiv.textContent = `Casillas raspadas: 0/${game3GridSize}`;
+  restartBtn.style.display = "inline-block";
+  backBtn.style.display = "inline-block";
+
+  boardDiv.style.gridTemplateColumns = "repeat(4, 80px)";
+
+  game3CellsData.forEach((cellData, idx) => {
+    const div = document.createElement("div");
+    div.classList.add("cell", "game3");
+    div.dataset.index = idx;
+    div.textContent = cellData.symbol;
+    div.style.color = "transparent";
+    div.style.cursor = "pointer";
+
+    div.addEventListener("click", () => {
+      if (!game3Active) return;
+      if (div.classList.contains("revealed")) return;
+
+      div.classList.add("revealed");
+      div.style.color = "#444";
+      game3ScratchedCount++;
+
+      scoreDiv.textContent = `Casillas raspadas: ${game3ScratchedCount}/${game3GridSize}`;
+
+      if (game3ScratchedCount === game3GridSize) {
+        finalizeGame3();
+      } else {
+        updateGame3ResultPartial();
+      }
+    });
+
+    boardDiv.appendChild(div);
+  });
+}
+
+function updateGame3ResultPartial() {
+  const revealedCells = Array.from(boardDiv.querySelectorAll(".cell.game3.revealed"));
+
+  let symbolCount = {};
+  revealedCells.forEach(cell => {
+    const idx = cell.dataset.index;
+    const sym = game3CellsData[idx].symbol;
+    symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+  });
+
+  let foundText = "Símbolos descubiertos: ";
+  const entries = Object.entries(symbolCount);
+  foundText += entries.length > 0
+    ? entries.map(([sym, count]) => `${sym} x${count}`).join(", ")
+    : "ninguno";
+
+  messageDiv.innerHTML = `<div>${foundText}</div>`;
+  messageDiv.classList.add("show");
+}
+
+function finalizeGame3() {
+  game3Active = false;
+  const revealedCells = Array.from(boardDiv.querySelectorAll(".cell.game3.revealed"));
+
+  let symbolCount = {};
+  revealedCells.forEach(cell => {
+    const idx = cell.dataset.index;
+    const sym = game3CellsData[idx].symbol;
+    symbolCount[sym] = (symbolCount[sym] || 0) + 1;
+  });
+
+  // Filtrar símbolos con 3 o más coincidencias
+  const winners = Object.entries(symbolCount).filter(([sym, count]) => count >= 3);
+
+  if (winners.length > 0) {
+    let totalPoints = 0;
+    let prizesList = winners.map(([sym, count]) => {
+      let points = game3Points[sym] || 0;
+      let partial = points * count;
+      totalPoints += partial;
+      return `${count} x ${sym} (${partial} puntos)`;
+    });
+
+    messageDiv.innerHTML = `<div>¡Has ganado! 🎉</div>
+      <div>Premios encontrados:</div>
+      <div>${prizesList.join("<br>")}</div>
+      <div style="margin-top:10px; font-weight:bold;">Puntaje final: ${totalPoints} puntos</div>`;
+
+    scoreDiv.textContent = `Puntuación: ${totalPoints}`;
+
+    sendScore("Flower Power", totalPoints);
+  } else {
+    messageDiv.innerHTML = `<div>Juego terminado, no ganaste esta vez.</div>
+      <div style="margin-top:10px; font-weight:bold;">Puntaje final: 0 puntos</div>`;
+    scoreDiv.textContent = `Puntuación: 0`;
+  }
+
+  restartBtn.style.display = "inline-block";
+}
+
+
+</script>
+
+</body>
+</html>
+
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+/* Estilos para la etiqueta body y los enlaces */
+body { 
+        background-color: #fdb585; 
+        background: radial-gradient(circle, rgb(242, 207, 142), #f1a06a);
+        font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+        color: rgb(40, 38, 38);   
+}
+    
+main {    
+        padding: 10px;    
+        border: 1px solid black;
+        margin: 30px auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 90%;
+        max-width: 765px;
+}
+    
+.section01 {
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.43);
+        padding: 0 10px 10px 10px;   
+        margin: 10px 0;  
+        width: 100%;
+}
+    
+.section02 {
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.43);
+        margin: 10px 0; 
+        padding: 20px;
+        width: 100%;
+}
+    
+.stats {
+        width: 100%;
+        max-width: 160px;
+        border: 2px solid white;
+        border-radius: 6px;
+        padding: 20px;
+        text-shadow: black 1px 0 1px;
+        color: #f1a06a;
+}
+    
+h1 {
+        text-align: center;
+        text-shadow: black 1px 0 6px;
+        color: white;
+}
+    
+button {
+        height: 100px;
+        width: 100px;
+        font-size: 25px;
+        color: black;
+        font-weight: bold;
+}
+    
+button:hover {
+        cursor: pointer;
+}
+    
+footer {
+        text-align: center;
+        color: rgb(94, 89, 89);
+}
+    
+/* Diseño Responsive para nuestro juego de memoria */
+@media (min-width: 1000px) {
+        main {
+            flex-direction: row;
+            align-items: flex-start;
+        }
+    
+        .section01 {
+            margin-right: 30px;
+            margin-left: 0;
+            width: calc(100% - 340px);
+        }
+    
+        .section02 {
+            width: 215px;
+            margin-left: 0;
+        }
+}
+
+@media (max-width: 1000px) {
+        .section02 {
+            width: 210px;
+        }
+
+        .section01 {
+            width: 420px;
+        }
+}    
+
+
+/* Estilos para el input */
+input#playerName {
+    height: 30px; /* Establece una altura personalizada */
+    padding: 5px 10px; /* Controla el padding */
+    font-size: 16px; /* Ajusta el tamaño de la fuente */
+    border: 2px solid #f1a06a; /* Agrega un borde */
+    border-radius: 6px; /* Redondea las esquinas */
+    width: 200px; /* Ajusta el ancho si es necesario */
+}
+
+/* Contenedor de reinicio */
+.restart-container {
+    text-align: center;
+    margin-top: 20px;  /* Añadir un poco de separación */
+}
+/* Estilos para el div o enlace que reemplaza el botón */
+.restart-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #4CAF50; /* Color del botón */
+    color: white;
+    text-align: center;
+    border: 1px solid #4CAF50; /* Borde del botón */
+    border-radius: 6px; /* Bordes redondeados */
+    cursor: pointer;
+    text-decoration: none; /* Quitar subrayado si es un enlace */
+    margin-top: 20px;
+}
+
+.restart-btn:hover {
+    background-color: #45a049; /* Color al pasar el cursor */
+}
+

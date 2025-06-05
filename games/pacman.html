@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pac-Man Phaser 3 básico con guardado</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: black;
+    }
+    #game-container {
+      margin: auto;
+      width: 480px;
+      height: 480px;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <script type="module">
+    import { saveGameSession } from '../js/api.js';
+
+    const config = {
+      type: Phaser.AUTO,
+      width: 480,
+      height: 480,
+      parent: "game-container",
+      physics: {
+        default: "arcade",
+        arcade: {
+          debug: false,
+        }
+      },
+      scene: {
+        preload,
+        create,
+        update
+      }
+    };
+
+    const game = new Phaser.Game(config);
+
+    let player;
+    let cursors;
+    let walls;
+    let dots;
+    let score = 0;
+    let scoreText;
+
+    // Mapa simple 15x15: 1 = pared, 0 = espacio + punto
+    const level = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,1,1,0,1,1,1,0,1,1,1,0,1],
+      [1,0,1,0,0,0,0,0,0,0,0,0,1,0,1],
+      [1,0,1,0,1,1,1,0,1,1,1,0,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,0,1,0,1,1,0,1,0,1,1,0,1,0,1],
+      [1,0,1,0,0,0,0,1,0,0,0,0,1,0,1],
+      [1,0,1,1,1,1,0,1,0,1,1,1,1,0,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    ];
+
+    function preload() {
+      this.load.image('wall', 'https://i.imgur.com/2nCt3Sbl.png');
+      this.load.image('dot', 'https://i.imgur.com/cUE9iGsl.png');
+      this.load.spritesheet('pacman', 'https://i.imgur.com/TrPp2sIl.png', { frameWidth: 32, frameHeight: 32 });
+    }
+
+    function create() {
+      walls = this.physics.add.staticGroup();
+      dots = this.physics.add.staticGroup();
+
+      for (let row = 0; row < level.length; row++) {
+        for (let col = 0; col < level[row].length; col++) {
+          let x = col * 32 + 16;
+          let y = row * 32 + 16;
+          if (level[row][col] === 1) {
+            walls.create(x, y, 'wall');
+          } else {
+            dots.create(x, y, 'dot');
+          }
+        }
+      }
+
+      player = this.physics.add.sprite(16 + 32, 16 + 32, 'pacman').setScale(1);
+      player.setCollideWorldBounds(true);
+
+      this.anims.create({
+        key: 'open',
+        frames: this.anims.generateFrameNumbers('pacman', { start: 0, end: 1 }),
+        frameRate: 6,
+        repeat: -1
+      });
+
+      player.anims.play('open');
+
+      this.physics.add.collider(player, walls);
+      this.physics.add.overlap(player, dots, eatDot, null, this);
+
+      cursors = this.input.keyboard.createCursorKeys();
+
+      scoreText = this.add.text(10, 10, 'Puntos: 0', { fontSize: '20px', fill: '#fff' });
+
+      // Obtener token del localStorage
+      window.token = (localStorage.getItem('token') || '').trim();
+      if (!window.token) {
+        alert('No has iniciado sesión. Serás redirigido al login.');
+        window.location.href = 'login.html';
+      }
+    }
+
+    function update() {
+      player.setVelocity(0);
+
+      if (cursors.left.isDown) {
+        player.setVelocityX(-120);
+        player.angle = 180;
+      } else if (cursors.right.isDown) {
+        player.setVelocityX(120);
+        player.angle = 0;
+      }
+
+      if (cursors.up.isDown) {
+        player.setVelocityY(-120);
+        player.angle = 270;
+      } else if (cursors.down.isDown) {
+        player.setVelocityY(120);
+        player.angle = 90;
+      }
+    }
+
+    function eatDot(player, dot) {
+      dot.destroy();
+      score += 10;
+      scoreText.setText('Puntos: ' + score);
+
+      if (dots.countActive() === 0) {
+        // Juego terminado, guardar puntuación * 10
+        saveScore();
+      }
+    }
+
+    async function saveScore() {
+      try {
+        await saveGameSession(window.token, 'Pac-Man', score * 10);
+        alert('Puntuación guardada correctamente: ' + (score * 10));
+      } catch (e) {
+        alert('Error guardando puntuación: ' + e.message);
+        if (e.message.toLowerCase().includes('unauthorized')) {
+          localStorage.clear();
+          window.location.href = 'login.html';
+        }
+      }
+    }
+  </script>
+</body>
+</html>

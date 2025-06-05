@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Snake Game con Guardado</title>
+  <style>
+    body {
+      background: #222;
+      color: #eee;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1rem;
+      margin: 0;
+      height: 100vh;
+    }
+
+    h1 {
+      margin-bottom: 0.5em;
+    }
+#gameContainer {
+  position: relative;
+  background: #111;
+  border: 4px solid #4caf50;
+  border-radius: 12px;
+  box-shadow: 0 0 20px #4caf50;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1 / 1;
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  background-color: #000;
+  border-radius: 12px;
+  display: block;
+}
+
+    #scoreBoard {
+      margin-top: 1rem;
+      font-size: 1.3rem;
+      color: #4caf50;
+    }
+
+    #btnRestart {
+      margin-top: 1rem;
+      padding: 10px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: #111;
+      cursor: pointer;
+    }
+
+    #btnRestart:hover {
+      background-color: #45a049;
+    }
+
+    .controls {
+  max-width: 400px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-control {
+  width: 50px;
+  height: 50px;
+  font-size: 1.3rem;
+  border: none;
+  border-radius: 50%;
+  background-color: #4caf50;
+  color: #111;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+  </style>
+</head>
+<body>
+
+<h1>Snake Game 🐍</h1>
+
+<div id="gameContainer">
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+</div>
+
+<div id="scoreBoard">Puntuación: 0</div>
+
+<div class="controls">
+  <button class="btn-control" data-dir="up">⬆️</button>
+  <button class="btn-control" data-dir="left">⬅️</button>
+  <button class="btn-control" data-dir="down">⬇️</button>
+  <button class="btn-control" data-dir="right">➡️</button>
+</div>
+
+<button id="btnRestart">Reiniciar Juego</button>
+
+<script type="module">
+  import { saveGameSession } from '../js/api.js';
+
+  (() => {
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreBoard = document.getElementById('scoreBoard');
+    const btnRestart = document.getElementById('btnRestart');
+    const controlButtons = document.querySelectorAll('.btn-control');
+
+    const gridSize = 20;
+    const tileCount = 20; // canvas width / gridSize
+    let scale = canvas.width / tileCount;
+
+    let snake = [{ x: 10, y: 10 }];
+    let velocity = { x: 0, y: 0 };
+    let apple = { x: 5, y: 5 };
+    let score = 0;
+    let gameInterval;
+    let speed = 200;  //Velocidad Snake
+
+    const token = (localStorage.getItem('token') || '').trim();
+    if (!token) {
+      alert('No has iniciado sesión. Serás redirigido al login.');
+      window.location.href = 'login.html';
+    }
+
+    function resetGame() {
+      snake = [{ x: 10, y: 10 }];
+      velocity = { x: 0, y: 0 };
+      apple = randomApplePosition();
+      score = 0;
+      speed = 100;
+      scoreBoard.textContent = `Puntuación: ${score}`;
+      clearInterval(gameInterval);
+      gameInterval = setInterval(gameLoop, speed);
+    }
+
+    function randomApplePosition() {
+      let position;
+      do {
+        position = {
+          x: Math.floor(Math.random() * tileCount),
+          y: Math.floor(Math.random() * tileCount)
+        };
+      } while (snake.some(seg => seg.x === position.x && seg.y === position.y));
+      return position;
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+    }
+
+    function update() {
+      if (velocity.x === 0 && velocity.y === 0) return;
+
+      const head = {
+        x: snake[0].x + velocity.x,
+        y: snake[0].y + velocity.y
+      };
+
+      if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+        return gameOver();
+      }
+
+      if (snake.some(seg => seg.x === head.x && seg.y === head.y)) {
+        return gameOver();
+      }
+
+      snake.unshift(head);
+
+      if (head.x === apple.x && head.y === apple.y) {
+        score++;
+        scoreBoard.textContent = `Puntuación: ${score}`;
+        apple = randomApplePosition();
+
+        if (score % 5 === 0 && speed > 50) {
+          speed -= 5;
+          clearInterval(gameInterval);
+          gameInterval = setInterval(gameLoop, speed);
+        }
+      } else {
+        snake.pop();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Apple
+      ctx.fillStyle = '#e74c3c';
+      ctx.beginPath();
+      ctx.arc(
+        apple.x * gridSize + gridSize / 2,
+        apple.y * gridSize + gridSize / 2,
+        gridSize / 2.5,
+        0,
+        Math.PI * 2
+      );
+      ctx.fill();
+
+      // Snake
+      snake.forEach((segment, i) => {
+        ctx.fillStyle = i === 0 ? '#2ecc71' : '#27ae60';
+        ctx.strokeStyle = '#145a32';
+        ctx.lineWidth = 2;
+        ctx.fillRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+        ctx.strokeRect(segment.x * gridSize, segment.y * gridSize, gridSize, gridSize);
+      });
+    }
+
+    async function gameOver() {
+      clearInterval(gameInterval);
+      alert(`¡Juego terminado! Tu puntuación fue: ${score}`);
+
+      try {
+        await saveGameSession(token, 'Snake Game', score * 30);
+        console.log('Puntuación guardada correctamente', score * 30);
+      } catch (e) {
+        alert('Error guardando puntuación: ' + e.message);
+        if (e.message.toLowerCase().includes('unauthorized')) {
+          localStorage.clear();
+          window.location.href = '/index.html';
+        }
+      }
+    }
+
+    // Teclado
+    window.addEventListener('keydown', e => {
+      switch (e.key) {
+        case 'ArrowUp':
+          if (velocity.y !== 1) velocity = { x: 0, y: -1 };
+          break;
+        case 'ArrowDown':
+          if (velocity.y !== -1) velocity = { x: 0, y: 1 };
+          break;
+        case 'ArrowLeft':
+          if (velocity.x !== 1) velocity = { x: -1, y: 0 };
+          break;
+        case 'ArrowRight':
+          if (velocity.x !== -1) velocity = { x: 1, y: 0 };
+          break;
+      }
+    });
+
+    // Botones de control (ratón o táctil)
+    controlButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const dir = btn.dataset.dir;
+        switch (dir) {
+          case 'up':
+            if (velocity.y !== 1) velocity = { x: 0, y: -1 };
+            break;
+          case 'down':
+            if (velocity.y !== -1) velocity = { x: 0, y: 1 };
+            break;
+          case 'left':
+            if (velocity.x !== 1) velocity = { x: -1, y: 0 };
+            break;
+          case 'right':
+            if (velocity.x !== -1) velocity = { x: 1, y: 0 };
+            break;
+        }
+      });
+    });
+
+    // Gestos táctiles
+    let startX = 0, startY = 0;
+    canvas.addEventListener('touchstart', e => {
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+    });
+
+    canvas.addEventListener('touchend', e => {
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && velocity.x !== -1) velocity = { x: 1, y: 0 };
+        else if (dx < 0 && velocity.x !== 1) velocity = { x: -1, y: 0 };
+      } else {
+        if (dy > 0 && velocity.y !== -1) velocity = { x: 0, y: 1 };
+        else if (dy < 0 && velocity.y !== 1) velocity = { x: 0, y: -1 };
+      }
+    });
+
+    btnRestart.addEventListener('click', resetGame);
+
+    resetGame();
+  })();
+</script>
+
+</body>
+</html>

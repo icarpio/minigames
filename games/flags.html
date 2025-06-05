@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Matching Flags Quiz - 30 países con temporizador</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    margin: 0;
+  }
+  h1 {
+    margin-bottom: 15px;
+    text-align: center;
+  }
+  #game-board {
+    display: grid;
+    grid-template-columns: repeat(6, 90px);
+    grid-gap: 12px;
+    justify-content: center;
+  }
+  .card {
+    width: 90px;
+    height: 110px;
+    perspective: 800px;
+    cursor: pointer;
+  }
+  .card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.5s;
+    transform-style: preserve-3d;
+  }
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+    cursor: default;
+  }
+  .card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    backface-visibility: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  }
+  .card-front {
+    background: #1e90ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1rem;
+  }
+  .card-back {
+    background: white;
+    transform: rotateY(180deg);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid #ddd;
+  }
+  .card-back img {
+    width: 75px;
+    height: 45px;
+    border-radius: 5px;
+    object-fit: cover;
+  }
+  #score, #timer {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  #message {
+    margin-top: 15px;
+    font-size: 18px;
+    color: green;
+    height: 24px;
+  }
+  #restart-btn {
+    margin-top: 20px;
+    padding: 8px 18px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Matching Flags Quiz</h1>
+
+<div id="game-board"></div>
+
+<div id="score">Pares encontrados: 0</div>
+<div id="timer">Tiempo: 0s</div>
+<div id="message"></div>
+<button id="restart-btn">Reiniciar juego</button>
+
+<script type="module">
+import { saveGameSession } from '../js/api.js';
+
+const token = (localStorage.getItem('token') || '').trim();
+if (!token) {
+  alert('No has iniciado sesión. Serás redirigido al login.');
+  window.location.href = 'login.html';
+}
+
+const flags = [
+  { country: 'España', img: 'https://flagcdn.com/w80/es.png' },
+  { country: 'Francia', img: 'https://flagcdn.com/w80/fr.png' },
+  { country: 'Italia', img: 'https://flagcdn.com/w80/it.png' },
+  { country: 'Alemania', img: 'https://flagcdn.com/w80/de.png' },
+  { country: 'Brasil', img: 'https://flagcdn.com/w80/br.png' },
+  { country: 'Japón', img: 'https://flagcdn.com/w80/jp.png' },
+  { country: 'Canadá', img: 'https://flagcdn.com/w80/ca.png' },
+  { country: 'Australia', img: 'https://flagcdn.com/w80/au.png' },
+  { country: 'Estados Unidos', img: 'https://flagcdn.com/w80/us.png' },
+  { country: 'Reino Unido', img: 'https://flagcdn.com/w80/gb.png' },
+  { country: 'México', img: 'https://flagcdn.com/w80/mx.png' },
+  { country: 'Argentina', img: 'https://flagcdn.com/w80/ar.png' },
+  { country: 'Sudáfrica', img: 'https://flagcdn.com/w80/za.png' },
+  { country: 'China', img: 'https://flagcdn.com/w80/cn.png' },
+  { country: 'India', img: 'https://flagcdn.com/w80/in.png' },
+  { country: 'Rusia', img: 'https://flagcdn.com/w80/ru.png' },
+  { country: 'Corea del Sur', img: 'https://flagcdn.com/w80/kr.png' },
+  { country: 'Turquía', img: 'https://flagcdn.com/w80/tr.png' },
+  { country: 'Grecia', img: 'https://flagcdn.com/w80/gr.png' },
+  { country: 'Portugal', img: 'https://flagcdn.com/w80/pt.png' },
+  { country: 'Países Bajos', img: 'https://flagcdn.com/w80/nl.png' },
+  { country: 'Noruega', img: 'https://flagcdn.com/w80/no.png' },
+  { country: 'Suecia', img: 'https://flagcdn.com/w80/se.png' },
+  { country: 'Polonia', img: 'https://flagcdn.com/w80/pl.png' },
+  { country: 'Bélgica', img: 'https://flagcdn.com/w80/be.png' },
+  { country: 'Egipto', img: 'https://flagcdn.com/w80/eg.png' },
+  { country: 'Chile', img: 'https://flagcdn.com/w80/cl.png' },
+  { country: 'Colombia', img: 'https://flagcdn.com/w80/co.png' },
+  { country: 'Indonesia', img: 'https://flagcdn.com/w80/id.png' },
+  { country: 'Nueva Zelanda', img: 'https://flagcdn.com/w80/nz.png' },
+  { country: 'Afganistán', img: 'https://flagcdn.com/w80/af.png' },
+  { country: 'Albania', img: 'https://flagcdn.com/w80/al.png' },
+  { country: 'Andorra', img: 'https://flagcdn.com/w80/ad.png' },
+  { country: 'Angola', img: 'https://flagcdn.com/w80/ao.png' },
+  { country: 'Antigua y Barbuda', img: 'https://flagcdn.com/w80/ag.png' },
+  { country: 'Armenia', img: 'https://flagcdn.com/w80/am.png' },
+  { country: 'Australia', img: 'https://flagcdn.com/w80/au.png' },
+  { country: 'Austria', img: 'https://flagcdn.com/w80/at.png' },
+  { country: 'Azerbaiyán', img: 'https://flagcdn.com/w80/az.png' },
+  { country: 'Bahamas', img: 'https://flagcdn.com/w80/bs.png' },
+  { country: 'Barbados', img: 'https://flagcdn.com/w80/bb.png' },
+  { country: 'Baréin', img: 'https://flagcdn.com/w80/bh.png' },
+  { country: 'Bangladesh', img: 'https://flagcdn.com/w80/bd.png' },
+  { country: 'Barbados', img: 'https://flagcdn.com/w80/bb.png' },
+  { country: 'Bélgica', img: 'https://flagcdn.com/w80/be.png' },
+  { country: 'Belice', img: 'https://flagcdn.com/w80/bz.png' },
+  { country: 'Benín', img: 'https://flagcdn.com/w80/bj.png' },
+  { country: 'Bielorrusia', img: 'https://flagcdn.com/w80/by.png' },
+  { country: 'Birmania', img: 'https://flagcdn.com/w80/mm.png' },
+  { country: 'Bolivia', img: 'https://flagcdn.com/w80/bo.png' },
+  { country: 'Bosnia y Herzegovina', img: 'https://flagcdn.com/w80/ba.png' },
+  { country: 'Botsuana', img: 'https://flagcdn.com/w80/bw.png' },
+  { country: 'Brasil', img: 'https://flagcdn.com/w80/br.png' },
+  { country: 'Brunéi', img: 'https://flagcdn.com/w80/bn.png' },
+  { country: 'Bulgaria', img: 'https://flagcdn.com/w80/bg.png' },
+  { country: 'Burkina Faso', img: 'https://flagcdn.com/w80/bf.png' },
+  { country: 'Burundi', img: 'https://flagcdn.com/w80/bi.png' },
+  { country: 'Bután', img: 'https://flagcdn.com/w80/bt.png' },
+  { country: 'Cabo Verde', img: 'https://flagcdn.com/w80/cv.png' },
+  { country: 'Camboya', img: 'https://flagcdn.com/w80/kh.png' },
+  { country: 'Camerún', img: 'https://flagcdn.com/w80/cm.png' },
+  { country: 'Canadá', img: 'https://flagcdn.com/w80/ca.png' },
+  { country: 'Catar', img: 'https://flagcdn.com/w80/qa.png' },
+  { country: 'Chad', img: 'https://flagcdn.com/w80/td.png' },
+  { country: 'Perú', img: 'https://flagcdn.com/w80/pe.png' },
+  { country: 'Venezuela', img: 'https://flagcdn.com/w80/ve.png' },
+  { country: 'Uruguay', img: 'https://flagcdn.com/w80/uy.png' },
+  { country: 'Paraguay', img: 'https://flagcdn.com/w80/py.png' },
+  { country: 'Bolivia', img: 'https://flagcdn.com/w80/bo.png' },
+  { country: 'Ecuador', img: 'https://flagcdn.com/w80/ec.png' },
+  { country: 'Cuba', img: 'https://flagcdn.com/w80/cu.png' },
+  { country: 'República Dominicana', img: 'https://flagcdn.com/w80/do.png' },
+  { country: 'Guatemala', img: 'https://flagcdn.com/w80/gt.png' },
+  { country: 'Honduras', img: 'https://flagcdn.com/w80/hn.png' },
+  { country: 'El Salvador', img: 'https://flagcdn.com/w80/sv.png' },
+  { country: 'Nicaragua', img: 'https://flagcdn.com/w80/ni.png' },
+  { country: 'Costa Rica', img: 'https://flagcdn.com/w80/cr.png' },
+  { country: 'Panamá', img: 'https://flagcdn.com/w80/pa.png' },
+  { country: 'Puerto Rico', img: 'https://flagcdn.com/w80/pr.png' },
+  { country: 'Filipinas', img: 'https://flagcdn.com/w80/ph.png' },
+  { country: 'Malasia', img: 'https://flagcdn.com/w80/my.png' },
+  { country: 'Tailandia', img: 'https://flagcdn.com/w80/th.png' },
+  { country: 'Vietnam', img: 'https://flagcdn.com/w80/vn.png' },
+  { country: 'Pakistán', img: 'https://flagcdn.com/w80/pk.png' },
+  { country: 'Irán', img: 'https://flagcdn.com/w80/ir.png' },
+  { country: 'Irak', img: 'https://flagcdn.com/w80/iq.png' },
+  { country: 'Arabia Saudita', img: 'https://flagcdn.com/w80/sa.png' },
+  { country: 'Israel', img: 'https://flagcdn.com/w80/il.png' },
+  { country: 'Ucrania', img: 'https://flagcdn.com/w80/ua.png' },
+  { country: 'Finlandia', img: 'https://flagcdn.com/w80/fi.png' },
+  { country: 'Dinamarca', img: 'https://flagcdn.com/w80/dk.png' },
+  { country: 'Suiza', img: 'https://flagcdn.com/w80/ch.png' },
+  { country: 'Hungría', img: 'https://flagcdn.com/w80/hu.png' },
+  { country: 'República Checa', img: 'https://flagcdn.com/w80/cz.png' }
+  
+  
+];
+
+const gameBoard = document.getElementById('game-board');
+const scoreDisplay = document.getElementById('score');
+const timerDisplay = document.getElementById('timer');
+const messageDisplay = document.getElementById('message');
+const restartBtn = document.getElementById('restart-btn');
+
+let cards = [];
+let flippedCards = [];
+let matchedPairs = 0;
+const totalPairs = flags.length;
+
+let timer = 0;
+let timerInterval = null;
+
+function shuffle(array) {
+  for (let i = array.length -1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+function createCards() {
+  const doubled = flags.concat(flags); // pares duplicados
+  cards = shuffle(doubled.map((flag, index) => ({
+    id: index,
+    country: flag.country,
+    img: flag.img,
+    matched: false,
+  })));
+
+  gameBoard.innerHTML = '';
+  cards.forEach((card, index) => {
+    const cardElem = document.createElement('div');
+    cardElem.classList.add('card');
+    cardElem.dataset.index = index;
+
+    cardElem.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">?</div>
+        <div class="card-back"><img src="${card.img}" alt="Bandera de ${card.country}" /></div>
+      </div>
+    `;
+
+    gameBoard.appendChild(cardElem);
+  });
+
+  matchedPairs = 0;
+  flippedCards = [];
+  scoreDisplay.textContent = `Pares encontrados: 0`;
+  messageDisplay.textContent = '';
+  
+  resetTimer();
+  startTimer();
+}
+
+function flipCard(cardElem) {
+  if (flippedCards.length >= 2) return;
+  if (cardElem.classList.contains('flipped')) return;
+
+  cardElem.classList.add('flipped');
+  flippedCards.push(cardElem);
+
+  if (flippedCards.length === 2) {
+    checkMatch();
+  }
+}
+
+function checkMatch() {
+  const [cardA, cardB] = flippedCards;
+  const indexA = parseInt(cardA.dataset.index);
+  const indexB = parseInt(cardB.dataset.index);
+
+  if (cards[indexA].country === cards[indexB].country) {
+    cards[indexA].matched = true;
+    cards[indexB].matched = true;
+    matchedPairs++;
+    scoreDisplay.textContent = `Pares encontrados: ${matchedPairs}`;
+    flippedCards = [];
+
+    if (matchedPairs === totalPairs) {
+      messageDisplay.textContent = '¡Felicidades! Has encontrado todos los pares.';
+      stopTimer();
+      saveScore(matchedPairs, timer);
+    }
+  } else {
+    setTimeout(() => {
+      cardA.classList.remove('flipped');
+      cardB.classList.remove('flipped');
+      flippedCards = [];
+    }, 1000);
+  }
+}
+
+function saveScore(score, time) {
+  // Multiplicamos la puntuación por 10 como antes
+  const finalScore = score * 10;
+  // Podemos enviar también el tiempo para que se guarde si el backend lo soporta (puedes adaptar según API)
+  saveGameSession(token, 'Matching Flags Quiz', finalScore, time)
+    .then(() => console.log('Puntuación guardada correctamente'))
+    .catch(e => {
+      alert('Error guardando puntuación: ' + e.message);
+      if (e.message.toLowerCase().includes('unauthorized')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    });
+}
+
+function startTimer() {
+  timer = 0;
+  timerDisplay.textContent = `Tiempo: ${timer}s`;
+  timerInterval = setInterval(() => {
+    timer++;
+    timerDisplay.textContent = `Tiempo: ${timer}s`;
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+function resetTimer() {
+  stopTimer();
+  timer = 0;
+  timerDisplay.textContent = `Tiempo: 0s`;
+}
+
+gameBoard.addEventListener('click', (e) => {
+  const cardElem = e.target.closest('.card');
+  if (!cardElem) return;
+  flipCard(cardElem);
+});
+
+restartBtn.addEventListener('click', () => {
+  createCards();
+});
+
+createCards();
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Pong contra IA</title>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    height: 100vh;
+    justify-content: center;
+  }
+  canvas {
+    background: black;
+    display: block;
+    margin-bottom: 10px;
+  }
+  #score {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  #message {
+    font-size: 18px;
+    margin-top: 10px;
+    height: 24px;
+  }
+  button {
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Pong contra IA</h1>
+<div id="score">Jugador: 0 | IA: 0</div>
+<canvas id="pong" width="600" height="400"></canvas>
+<div id="message"></div>
+<button id="start-btn">Iniciar Juego</button>
+
+<script type="module">
+import { saveGameSession } from '../js/api.js';
+
+const canvas = document.getElementById('pong');
+const ctx = canvas.getContext('2d');
+
+const scoreDisplay = document.getElementById('score');
+const messageDisplay = document.getElementById('message');
+const startBtn = document.getElementById('start-btn');
+
+const token = (localStorage.getItem('token') || '').trim();
+if (!token) {
+  alert('No has iniciado sesión. Serás redirigido al login.');
+  window.location.href = 'login.html';
+}
+
+// Juego variables
+const paddleWidth = 10;
+const paddleHeight = 100;
+const ballRadius = 8;
+const winScore = 5;
+
+let playerScore = 0;
+let aiScore = 0;
+
+let playerY = canvas.height / 2 - paddleHeight / 2;
+let aiY = playerY;
+
+let ballX, ballY;
+let ballSpeedX, ballSpeedY;
+
+let animationFrameId;
+let isPlaying = false;
+
+let startTime;
+let timerInterval;
+
+// Control jugador
+let mouseY = playerY;
+
+function resetBall() {
+  ballX = canvas.width / 2;
+  ballY = canvas.height / 2;
+  // Velocidad inicial aleatoria (derecha o izquierda)
+  ballSpeedX = (Math.random() > 0.5 ? 1 : -1) * 4;
+  ballSpeedY = (Math.random() * 4 - 2);
+}
+
+function drawRect(x, y, w, h, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+}
+
+function drawCircle(x, y, r, color) {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x, y, r, 0, Math.PI*2);
+  ctx.fill();
+}
+
+function drawNet() {
+  ctx.fillStyle = 'white';
+  const netWidth = 2;
+  const netHeight = 10;
+  for(let i=0; i < canvas.height; i += 15) {
+    ctx.fillRect(canvas.width/2 - netWidth/2, i, netWidth, netHeight);
+  }
+}
+
+function draw() {
+  // Fondo
+  drawRect(0, 0, canvas.width, canvas.height, 'black');
+  drawNet();
+
+  // Paletas
+  drawRect(0, playerY, paddleWidth, paddleHeight, 'white');
+  drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, 'white');
+
+  // Bola
+  drawCircle(ballX, ballY, ballRadius, 'white');
+}
+
+function update() {
+  if (!isPlaying) return;
+
+  // Mover bola
+  ballX += ballSpeedX;
+  ballY += ballSpeedY;
+
+  // Rebotes superior e inferior
+  if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+    ballSpeedY = -ballSpeedY;
+  }
+
+  // IA sigue bola con cierta dificultad
+  const aiCenter = aiY + paddleHeight/2;
+  if (aiCenter < ballY - 10) aiY += 4;
+  else if (aiCenter > ballY + 10) aiY -= 4;
+  // Limitar dentro del canvas
+  if (aiY < 0) aiY = 0;
+  if (aiY + paddleHeight > canvas.height) aiY = canvas.height - paddleHeight;
+
+  // Rebote con paletas
+  if (ballX - ballRadius < paddleWidth) {
+    if (ballY > playerY && ballY < playerY + paddleHeight) {
+      ballSpeedX = -ballSpeedX;
+      // Aumentar velocidad para dificultad progresiva
+      ballSpeedX *= 1.05;
+      ballSpeedY *= 1.05;
+    } else {
+      // Punto para IA
+      aiScore++;
+      resetBall();
+    }
+  }
+
+  if (ballX + ballRadius > canvas.width - paddleWidth) {
+    if (ballY > aiY && ballY < aiY + paddleHeight) {
+      ballSpeedX = -ballSpeedX;
+      ballSpeedX *= 1.05;
+      ballSpeedY *= 1.05;
+    } else {
+      // Punto para jugador
+      playerScore++;
+      resetBall();
+    }
+  }
+
+  // Actualizar marcador
+  scoreDisplay.textContent = `Jugador: ${playerScore} | IA: ${aiScore}`;
+
+  // Comprobar ganador
+  if (playerScore >= winScore || aiScore >= winScore) {
+    isPlaying = false;
+    stopTimer();
+    messageDisplay.textContent = playerScore >= winScore ? '¡Has ganado!' : 'La IA ha ganado.';
+    saveScore(playerScore);
+    startBtn.disabled = false;
+  }
+}
+
+function gameLoop() {
+  update();
+  draw();
+  if (isPlaying) {
+    animationFrameId = requestAnimationFrame(gameLoop);
+  }
+}
+
+function saveScore(score) {
+  // score * 10 según petición
+  saveGameSession(token, 'Pong', score * 10)
+    .then(() => console.log('Puntuación guardada correctamente'))
+    .catch(e => {
+      alert('Error guardando puntuación: ' + e.message);
+      if (e.message.toLowerCase().includes('unauthorized')) {
+        localStorage.clear();
+        window.location.href = 'login.html';
+      }
+    });
+}
+
+function startTimer() {
+  startTime = Date.now();
+  timerInterval = setInterval(() => {
+    // Puedes mostrar tiempo si quieres
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+}
+
+// Mover paleta jugador con ratón
+canvas.addEventListener('mousemove', (e) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseY = e.clientY - rect.top - paddleHeight / 2;
+  if (mouseY < 0) mouseY = 0;
+  if (mouseY + paddleHeight > canvas.height) mouseY = canvas.height - paddleHeight;
+  playerY = mouseY;
+});
+
+startBtn.addEventListener('click', () => {
+  playerScore = 0;
+  aiScore = 0;
+  messageDisplay.textContent = '';
+  startBtn.disabled = true;
+  resetBall();
+  startTimer();
+  isPlaying = true;
+  gameLoop();
+});
+
+</script>
+</body>
+</html>

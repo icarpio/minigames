@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tetris Responsive</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #111;
+    color: #eee;
+    text-align: center;
+    margin: 2rem;
+  }
+  #tetris {
+    background: #222;
+    border: 3px solid #555;
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+  }
+  #score {
+    font-size: 1.5rem;
+    margin: 1rem;
+  }
+  #btnRestart {
+    margin-top: 15px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+<h1>Tetris Responsive</h1>
+<canvas id="tetris"></canvas>
+<div id="score">Puntuación: 0</div>
+<button id="btnRestart">Reiniciar</button>
+
+<script type="module">
+
+import { saveGameSession } from '../js/api.js';
+
+const token = (localStorage.getItem('token') || '').trim();
+if (!token) {
+  alert('No has iniciado sesión. Serás redirigido al login.');
+  window.location.href = 'login.html';
+}
+
+const canvas = document.getElementById('tetris');
+const ctx = canvas.getContext('2d');
+const scoreDisplay = document.getElementById('score');
+const btnRestart = document.getElementById('btnRestart');
+
+const ROWS = 20;
+const COLS = 12;
+
+let BLOCK_SIZE = 20; // se actualizará dinámicamente
+
+// Colores y tetrominos igual que antes
+const colors = [
+  null,
+  '#FF0D72', // Z
+  '#0DC2FF', // S
+  '#0DFF72', // T
+  '#F538FF', // O
+  '#FF8E0D', // L
+  '#FFE138', // I
+  '#3877FF', // J
+];
+
+const tetrominos = {
+  0: [],
+  Z: [
+    [1, 1, 0],
+    [0, 1, 1],
+    [0, 0, 0],
+  ],
+  S: [
+    [0, 2, 2],
+    [2, 2, 0],
+    [0, 0, 0],
+  ],
+  T: [
+    [0, 3, 0],
+    [3, 3, 3],
+    [0, 0, 0],
+  ],
+  O: [
+    [4, 4],
+    [4, 4],
+  ],
+  L: [
+    [0, 0, 5],
+    [5, 5, 5],
+    [0, 0, 0],
+  ],
+  I: [
+    [0, 6, 0, 0],
+    [0, 6, 0, 0],
+    [0, 6, 0, 0],
+    [0, 6, 0, 0],
+  ],
+  J: [
+    [7, 0, 0],
+    [7, 7, 7],
+    [0, 0, 0],
+  ],
+};
+
+function createMatrix(w, h) {
+  const matrix = [];
+  while (h--) matrix.push(new Array(w).fill(0));
+  return matrix;
+}
+
+function drawMatrix(matrix, offset) {
+  matrix.forEach((row, y) => {
+    row.forEach((value, x) => {
+      if (value !== 0) {
+        ctx.fillStyle = colors[value];
+        ctx.fillRect(x + offset.x, y + offset.y, 1, 1);
+        ctx.strokeStyle = '#222';
+        ctx.lineWidth = 0.05;
+        ctx.strokeRect(x + offset.x, y + offset.y, 1, 1);
+      }
+    });
+  });
+}
+
+function merge(arena, player) {
+  player.matrix.forEach((row, y) => {
+    row.forEach((value, x) => {
+      if (value !== 0) {
+        arena[y + player.pos.y][x + player.pos.x] = value;
+      }
+    });
+  });
+}
+
+function collide(arena, player) {
+  const [m, o] = [player.matrix, player.pos];
+  for (let y = 0; y < m.length; y++) {
+    for (let x = 0; x < m[y].length; x++) {
+      if (
+        m[y][x] !== 0 &&
+        (arena[y + o.y] && arena[y + o.y][x + o.x]) !== 0
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function rotate(matrix, dir) {
+  for (let y = 0; y < matrix.length; y++) {
+    for (let x = 0; x < y; x++) {
+      [matrix[x][y], matrix[y][x]] = [matrix[y][x], matrix[x][y]];
+    }
+  }
+  if (dir > 0) {
+    matrix.forEach(row => row.reverse());
+  } else {
+    matrix.reverse();
+  }
+}
+
+function playerReset() {
+  const pieces = 'ZSOTLJI';
+  player.matrix = createPiece(pieces[(pieces.length * Math.random()) | 0]);
+  player.pos.y = 0;
+  player.pos.x = ((COLS / 2) | 0) - ((player.matrix[0].length / 2) | 0);
+  if (collide(arena, player)) {
+    arena.forEach(row => row.fill(0));
+    updateScore();
+    gameOver();
+  }
+}
+
+function createPiece(type) {
+  return tetrominos[type];
+}
+
+function playerDrop() {
+  player.pos.y++;
+  if (collide(arena, player)) {
+    player.pos.y--;
+    merge(arena, player);
+    sweepRows();
+    playerReset();
+    updateScore();
+  }
+  dropCounter = 0;
+}
+
+function sweepRows() {
+  let rowCount = 1;
+  outer: for (let y = arena.length -1; y >= 0; y--) {
+    for (let x = 0; x < arena[y].length; x++) {
+      if (arena[y][x] === 0) {
+        continue outer;
+      }
+    }
+    const row = arena.splice(y,1)[0].fill(0);
+    arena.unshift(row);
+    score += rowCount * 10;
+    rowCount *= 2;
+  }
+}
+
+function updateScore() {
+  scoreDisplay.textContent = `Puntuación: ${score}`;
+}
+
+function gameOver() {
+  isGameOver = true;
+  alert(`Juego terminado. Tu puntuación final es: ${score}`);
+  saveScore();
+}
+
+async function saveScore() {
+  try {
+    await saveGameSession(token, 'Tetris', score);
+    console.log('Puntuación guardada:', score);
+  } catch(e) {
+    alert('Error guardando puntuación: ' + e.message);
+    if (e.message.toLowerCase().includes('unauthorized')) {
+      localStorage.clear();
+      window.location.href = 'login.html';
+    }
+  }
+}
+
+let arena = createMatrix(COLS, ROWS);
+let player = {
+  pos: {x: 0, y: 0},
+  matrix: null,
+};
+let dropCounter = 0;
+let dropInterval = 800;
+let lastTime = 0;
+let score = 0;
+let isGameOver = false;
+
+// Ajustar canvas y escala según ancho ventana
+function resizeCanvas() {
+  // Anchura máxima deseada para el canvas (menos margen)
+  const maxWidth = window.innerWidth * 0.9;
+
+  // Calcular tamaño bloque basado en ancho disponible y columnas
+  BLOCK_SIZE = Math.floor(maxWidth / COLS);
+
+  canvas.width = COLS * BLOCK_SIZE;
+  canvas.height = ROWS * BLOCK_SIZE;
+
+  // Ajustar escala del canvas para que 1 unidad sea un bloque
+  ctx.setTransform(1, 0, 0, 1, 0, 0); // resetear transformaciones
+  ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
+}
+
+window.addEventListener('resize', () => {
+  resizeCanvas();
+  draw();
+});
+
+// Control teclado
+document.addEventListener('keydown', event => {
+  if (isGameOver) return;
+
+  if (event.key === 'ArrowLeft') {
+    player.pos.x--;
+    if (collide(arena, player)) player.pos.x++;
+  }
+  else if (event.key === 'ArrowRight') {
+    player.pos.x++;
+    if (collide(arena, player)) player.pos.x--;
+  }
+  else if (event.key === 'ArrowDown') {
+    playerDrop();
+  }
+  else if (event.key === 'ArrowUp') {
+    const pos = player.pos.x;
+    rotate(player.matrix, 1);
+    if (collide(arena, player)) {
+      rotate(player.matrix, -1);
+      player.pos.x = pos;
+    }
+  }
+});
+
+btnRestart.addEventListener('click', () => {
+  arena = createMatrix(COLS, ROWS);
+  score = 0;
+  updateScore();
+  isGameOver = false;
+  playerReset();
+  update();
+});
+
+function update(time = 0) {
+  if (isGameOver) return;
+  const deltaTime = time - lastTime;
+  lastTime = time;
+  dropCounter += deltaTime;
+  if (dropCounter > dropInterval) {
+    playerDrop();
+  }
+  draw();
+  requestAnimationFrame(update);
+}
+
+function draw() {
+  ctx.fillStyle = '#111';
+  ctx.fillRect(0, 0, canvas.width / BLOCK_SIZE, canvas.height / BLOCK_SIZE);
+
+  drawMatrix(arena, {x:0, y:0});
+  drawMatrix(player.matrix, player.pos);
+}
+
+// Iniciar juego y ajustar canvas tamaño
+resizeCanvas();
+playerReset();
+updateScore();
+update();
+
+</script>
+
+</body>
+</html>

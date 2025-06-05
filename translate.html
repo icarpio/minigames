@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traductor Multilingüe</title>
+</head>
+<body>
+    <h1>Traductor Multilingüe (Español, Inglés, Francés)</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        
+        <!-- Botón de traducción -->
+        <button type="submit" name="action" value="translate">Traducir</button>
+    
+        <!-- Botón para guardar la traducción -->
+        <button type="submit" name="action" value="save">Guardar Traducción</button>
+    </form>
+
+    {% if translation_result %}
+    <h2>Traducción:</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Idioma</th>
+                <th>Traducción</th>
+                <th>Escuchar</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/9/9a/Flag_of_Spain.svg" alt="Español" style="width: 20px; height: 15px;"/>
+                </td>
+                <td>{{ translation_result.spanish }}</td>
+                <td>
+                    <button onclick="speak('{{ translation_result.spanish|escapejs }}', 'es-ES')">🔊</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Flag_of_the_United_Kingdom_%281-2%29.svg" alt="Reino Unido" style="width: 20px; height: 15px;"/>
+                </td>
+                <td>{{ translation_result.english }}</td>
+                <td>
+                    <button onclick="speak('{{ translation_result.english|escapejs }}', 'en-US')">🔊</button>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c3/Flag_of_France.svg" alt="Francés" style="width: 20px; height: 15px;"/>
+
+                </td>
+                <td>{{ translation_result.french }}</td>
+                <td>
+                    <button onclick="speak('{{ translation_result.french|escapejs }}', 'fr-FR')">🔊</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+{% endif %}
+
+    <script>
+        function speak(text, lang) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang;
+        
+                // Obtener todas las voces disponibles
+                const voices = window.speechSynthesis.getVoices();
+                console.log('Voces disponibles:', voices);
+        
+                // Definir preferencias de voces
+                const voicePreferences = {
+                    'fr-FR': ['Google français', 'Microsoft Zira - English (United States)'], // Ejemplo de voces preferidas
+                    'es-ES': ['Microsoft Pablo - Spanish (Spain)', 'Google español'],
+                    'en-US': ['Google UK English Male', 'Google UK English Female', 'Microsoft David - English (United States)']
+                };
+        
+                // Seleccionar la voz adecuada
+                let selectedVoice;
+                if (voicePreferences[lang]) {
+                    // Buscar la primera voz preferida que esté disponible
+                    selectedVoice = voices.find(v => voicePreferences[lang].includes(v.name)) || voices.find(v => v.lang === lang) || voices[0];
+                } else {
+                    selectedVoice = voices.find(v => v.lang === lang) || voices[0];
+                }
+        
+                if (selectedVoice) {
+                    utterance.voice = selectedVoice; // Asignar la voz correcta
+                } else {
+                    alert(`No se encontró una voz compatible para el idioma ${lang}.`);
+                    return;
+                }
+        
+                // Reproducir el texto
+                window.speechSynthesis.speak(utterance);
+            } else {
+                alert('La síntesis de voz no es compatible con este navegador.');
+            }
+        }
+        
+        // Recargar las voces si el navegador las carga de forma asincrónica
+        window.speechSynthesis.onvoiceschanged = function() {
+            const voices = window.speechSynthesis.getVoices();
+            console.log('Voces cargadas:', voices);
+        };
+        
+        
+        
+    </script>
+</body>
+</html>
