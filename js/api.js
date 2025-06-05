@@ -9,6 +9,7 @@ export async function saveGameSession(token, gameName, scoreValue) {
       body: JSON.stringify({
         game: gameName,
         score: scoreValue,
+        played_at: new Date().toISOString() // siempre string ISO
       }),
     });
 
@@ -32,3 +33,5 @@ export async function saveGameSession(token, gameName, scoreValue) {
     throw error;
   }
 }
+
+
