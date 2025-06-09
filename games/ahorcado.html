@@ -124,7 +124,7 @@
   "TABERNACULO", "TACITURNO", "TALENTOSO", "TARDANZAS", "TELEFONICO",
   "TEMPORADA", "TENTACIONES", "TERCERA", "TERMINADO", "TERRITORIO",
   "TOLERANTE", "TORNILLOS", "TRANSPORTE", "TRASCENDER", "TRAVIESAS",
-  "TURBULENTO", "UNIFICADOS", "URGENTES",  "UBICUO", "UBICUOS", "UBICUAS", "UBICUAS", "UBICUAS",
+  "TURBULENTO", "UNIFICADOS", "URGENTES", "UBICUOS", "UBICUAS",
   "UCRANIANO", "UFOLOGIAS", "ULCERADOS", "ULTRAMAR", "ULTIMATUM",
   "UNANIMIDAD", "UNIFORMES", "UNIFICADO", "UNILATERAL", "UNIVERSAL",
   "UNIVERSO", "UNIDO", "UNIDOS", "UNIDAD", "UNIDADES",
@@ -214,10 +214,6 @@
     ? "¡Felicidades! Has ganado."
     : `Juego terminado. La palabra era: ${selectedWord}`;
   document.getElementById("message").textContent = message;
-  console.log("Intentando guardar puntuación:");
-  console.log("Token:", token);
-  console.log("Puntuación:", score);
-
   saveGameSession(token, "Ahorcado Game", score)
     .then(() => alert("Puntuación guardada correctamente!"))
     .catch(e => {

@@ -2,42 +2,132 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>Tetris Responsive</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
+  html, body {
+    margin: 0; 
+    padding: 0; 
+    height: 100%;
     background: #111;
     color: #eee;
-    text-align: center;
-    margin: 2rem;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
-  #tetris {
+  #container {
+    text-align: center;
+    padding: 1rem;
+    width: 100%;
+    max-width: 480px;
+    box-sizing: border-box;
+  }
+  h1 {
+    margin-bottom: 1rem;
+    font-size: 2rem;
+  }
+  canvas#tetris {
     background: #222;
     border: 3px solid #555;
     display: block;
-    margin: 0 auto;
-    max-width: 100%;
+    margin: 0 auto 1rem;
+    width: 100%;
     height: auto;
+    max-height: 600px;
+    touch-action: none;
   }
   #score {
     font-size: 1.5rem;
-    margin: 1rem;
+    margin-bottom: 1rem;
   }
   #btnRestart {
-    margin-top: 15px;
+    margin-top: 10px;
     padding: 10px 20px;
     font-size: 1rem;
     cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #444;
+    color: #eee;
+    transition: background-color 0.3s ease;
+  }
+  #btnHome{
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    background-color: #444;
+    color: #eee;
+    transition: background-color 0.3s ease;
+  }
+  #btnRestart:hover {
+    background-color: #666;
+  }
+  /* Botones táctiles para móviles */
+  #mobileControls {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  #mobileControls button {
+    flex: 1;
+    padding: 12px 0;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: 6px;
+    background-color: #333;
+    color: #eee;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  #mobileControls button:active {
+    background-color: #555;
+  }
+  @media (max-width: 400px) {
+    h1 {
+      font-size: 1.5rem;
+    }
+    #score {
+      font-size: 1.2rem;
+    }
+    #btnRestart {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    #btnHome {
+      padding: 8px 16px;
+      font-size: 0.9rem;
+    }
+    #mobileControls button {
+      font-size: 1rem;
+      padding: 10px 0;
+    }
   }
 </style>
 </head>
 <body>
 
-<h1>Tetris Responsive</h1>
-<canvas id="tetris"></canvas>
-<div id="score">Puntuación: 0</div>
-<button id="btnRestart">Reiniciar</button>
+<div id="container">
+  <h1>Tetris Responsive</h1>
+  <canvas id="tetris"></canvas>
+  <div id="score">Puntuación: 0</div>
+  
+  <div id="mobileControls" aria-label="Controles táctiles">
+    <button id="btnLeft" aria-label="Mover izquierda">←</button>
+    <button id="btnDown" aria-label="Mover abajo">↓</button>
+    <button id="btnRotate" aria-label="Rotar pieza">⤴</button>
+    <button id="btnRight" aria-label="Mover derecha">→</button>
+  </div>
+  
+  <button id="btnRestart">Reiniciar</button>
+  <button id="btnHome" onclick="window.location.href='../home.html'">Menu</button>
+
+</div>
 
 <script type="module">
 
@@ -46,7 +136,7 @@ import { saveGameSession } from '../js/api.js';
 const token = (localStorage.getItem('token') || '').trim();
 if (!token) {
   alert('No has iniciado sesión. Serás redirigido al login.');
-  window.location.href = 'login.html';
+  window.location.href = '/login.html';
 }
 
 const canvas = document.getElementById('tetris');
@@ -54,12 +144,15 @@ const ctx = canvas.getContext('2d');
 const scoreDisplay = document.getElementById('score');
 const btnRestart = document.getElementById('btnRestart');
 
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
+const btnDown = document.getElementById('btnDown');
+
 const ROWS = 20;
 const COLS = 12;
 
-let BLOCK_SIZE = 20; // se actualizará dinámicamente
+let BLOCK_SIZE = 20;
 
-// Colores y tetrominos igual que antes
 const colors = [
   null,
   '#FF0D72', // Z
@@ -245,19 +338,18 @@ let lastTime = 0;
 let score = 0;
 let isGameOver = false;
 
-// Ajustar canvas y escala según ancho ventana
 function resizeCanvas() {
-  // Anchura máxima deseada para el canvas (menos margen)
-  const maxWidth = window.innerWidth * 0.9;
+  const container = document.getElementById('container');
+  const maxWidth = container.clientWidth;
 
-  // Calcular tamaño bloque basado en ancho disponible y columnas
   BLOCK_SIZE = Math.floor(maxWidth / COLS);
+  if (BLOCK_SIZE < 15) BLOCK_SIZE = 15; 
+  if (BLOCK_SIZE > 30) BLOCK_SIZE = 30;
 
   canvas.width = COLS * BLOCK_SIZE;
   canvas.height = ROWS * BLOCK_SIZE;
 
-  // Ajustar escala del canvas para que 1 unidad sea un bloque
-  ctx.setTransform(1, 0, 0, 1, 0, 0); // resetear transformaciones
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
 }
 
@@ -266,7 +358,6 @@ window.addEventListener('resize', () => {
   draw();
 });
 
-// Control teclado
 document.addEventListener('keydown', event => {
   if (isGameOver) return;
 
@@ -289,6 +380,74 @@ document.addEventListener('keydown', event => {
       player.pos.x = pos;
     }
   }
+});
+
+// Funciones para botones táctiles
+btnLeft.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  player.pos.x--;
+  if (collide(arena, player)) player.pos.x++;
+  draw();
+});
+btnRight.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  player.pos.x++;
+  if (collide(arena, player)) player.pos.x--;
+  draw();
+});
+btnDown.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  playerDrop();
+  draw();
+});
+
+// También activar con click (por si alguien usa mouse en móvil)
+btnLeft.addEventListener('click', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  player.pos.x--;
+  if (collide(arena, player)) player.pos.x++;
+  draw();
+});
+btnRight.addEventListener('click', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  player.pos.x++;
+  if (collide(arena, player)) player.pos.x--;
+  draw();
+});
+btnDown.addEventListener('click', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  playerDrop();
+  draw();
+});
+const btnRotate = document.getElementById('btnRotate');
+
+btnRotate.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  const pos = player.pos.x;
+  rotate(player.matrix, 1);
+  if (collide(arena, player)) {
+    rotate(player.matrix, -1);
+    player.pos.x = pos;
+  }
+  draw();
+});
+btnRotate.addEventListener('click', e => {
+  e.preventDefault();
+  if (isGameOver) return;
+  const pos = player.pos.x;
+  rotate(player.matrix, 1);
+  if (collide(arena, player)) {
+    rotate(player.matrix, -1);
+    player.pos.x = pos;
+  }
+  draw();
 });
 
 btnRestart.addEventListener('click', () => {
@@ -320,7 +479,6 @@ function draw() {
   drawMatrix(player.matrix, player.pos);
 }
 
-// Iniciar juego y ajustar canvas tamaño
 resizeCanvas();
 playerReset();
 updateScore();

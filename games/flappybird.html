@@ -5,23 +5,122 @@
   <title>Flappy Bird Phaser 3 con guardado</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
   <style>
-    body {
-      margin: 0;
-      background: #70c5ce;
-    }
-    #game-container {
-      margin: auto;
-      width: 480px;
-      height: 640px;
-      display: block;
-    }
+ html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #70c5ce;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#game-container {
+  position: relative;
+  margin: auto;
+   /* max-width: 480px; */
+  /* max-height: 640px; */
+  overflow: hidden;
+  background: black;
+  touch-action: none;
+}
+#restart-button {
+  position: fixed;
+  bottom: 80px; /* Un poco arriba del botón saltar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 9999;
+  user-select: none;
+  touch-action: manipulation;
+}
+/* Desktop: tamaño fijo */
+@media (min-aspect-ratio: 3/4) {
+  #game-container {
+    width: 480px;
+    height: 640px;
+  }
+}
+
+/* Móviles verticales: altura 100vh, ancho proporcional */
+@media (max-aspect-ratio: 3/4) {
+  #game-container {
+    height: 100vh;
+    width: calc(100vh * (480 / 640));
+  }
+}
+
+/* En móviles muy estrechos, que el ancho no sea menor que 100% */
+@media (max-width: 320px) {
+  #game-container {
+    width: 100vw;
+    height: calc(100vw * (640 / 480));
+  }
+}
+
+#game-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  image-rendering: pixelated;
+}
+
+#jump-button {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 50px;
+  background: rgba(255,255,255,0.8);
+  border: none;
+  border-radius: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 9999;
+  touch-action: manipulation;
+  user-select: none;
+}
+
+@media (max-width: 320px) {
+  #jump-button {
+    width: 100px;
+    height: 45px;
+    font-size: 16px;
+  }
+}
+@media (max-aspect-ratio: 3/4) {
+  #game-container {
+    width: 100vw;
+    height: 100vh;
+    max-width: none;
+    max-height: none;
+  }
+}
+
   </style>
 </head>
 <body>
   <div id="game-container"></div>
+  <button id="jump-button">SALTAR</button>
+  <button id="restart-button" style="display:none;">REINICIAR</button>
 
   <script type="module">
     import { saveGameSession } from '../js/api.js';
+    const restartButton = document.getElementById('restart-button');
+
+    restartButton.addEventListener('click', () => {
+      // Reiniciar juego: recarga la página (opción sencilla)
+      window.location.reload();
+    });
 
     const config = {
       type: Phaser.AUTO,
@@ -34,6 +133,12 @@
           gravity: { y: 800 },
           debug: false
         }
+      },
+      scale: {
+        mode: Phaser.Scale.FIT,        // Mantener FIT para conservar proporción sin usar RESIZE
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 480,
+        height: 640,
       },
       scene: {
         preload,
@@ -50,6 +155,7 @@
     let scoreText;
     let gameOver = false;
     let token = (localStorage.getItem('token') || '').trim();
+    let pipeCollider;
 
     if (!token) {
       alert('No has iniciado sesión. Serás redirigido al login.');
@@ -57,9 +163,9 @@
     }
 
     function preload() {
-      this.load.image('bird', 'https://i.imgur.com/sM0vseF.png');
-      this.load.image('pipe', 'https://i.imgur.com/5QfP6Nv.png');
-      this.load.image('background', 'https://i.imgur.com/rk1Z8qS.png');
+      this.load.image('bird', '../assets/img/flappybird.png');
+      this.load.image('pipe', '../assets/img/tube.png');
+      this.load.image('background', '../assets/img/flappybackground.jpg');
     }
 
     function create() {
@@ -72,9 +178,15 @@
 
       score = 0;
       scoreText = this.add.text(10, 10, 'Puntos: 0', { fontSize: '24px', fill: '#fff' });
+      scoreText.setDepth(10);
 
       this.input.on('pointerdown', flap, this);
       this.input.keyboard.on('keydown-SPACE', flap, this);
+
+      const jumpButton = document.getElementById('jump-button');
+      jumpButton.addEventListener('click', () => {
+        flap.call(this);
+      });
 
       this.time.addEvent({
         delay: 1500,
@@ -84,6 +196,7 @@
       });
 
       this.physics.add.collider(bird, pipes, hitPipe, null, this);
+      
     }
 
     function update() {
@@ -92,9 +205,16 @@
         bird.setVelocity(0);
         return;
       }
+
       if (bird.angle < 20) {
         bird.angle += 1;
       }
+
+      pipes.children.iterate(pipe => {
+        if (pipe && pipe.active && pipe.x < -pipe.width) {
+          pipe.destroy();
+        }
+      });
     }
 
     function flap() {
@@ -104,26 +224,31 @@
     }
 
     function addPipeRow() {
-      const gap = Phaser.Math.Between(100, 150);
-      const pipeHole = Phaser.Math.Between(1, 4);
-      const pipeHeight = 320;
-      const pipeWidth = 52;
+      const gapSize = Phaser.Math.Between(180, 220);
+      const pipeX = config.width;
 
-      // Crear tuberías arriba y abajo con espacio para que pase el pájaro
-      for (let i = 0; i < 6; i++) {
-        if (i !== pipeHole && i !== pipeHole + 1) {
-          let pipeY = i * pipeHeight / 2;
-          let pipe = pipes.create(config.width + pipeWidth, pipeY, 'pipe');
-          pipe.setOrigin(0, 1);
-          pipe.body.allowGravity = false;
-          pipe.setVelocityX(-200);
-          pipe.checkWorldBounds = true;
-          pipe.outOfBoundsKill = true;
-          pipe.body.immovable = true;
-        }
-      }
+      const minGapTop = 100;
+      const maxGapTop = config.height - gapSize - 100;
+      const gapY = Phaser.Math.Between(minGapTop, maxGapTop);
 
-      // Incrementar puntuación cada vez que se añade una fila de tubos
+      const topPipe = pipes.create(pipeX, gapY, 'pipe');
+      topPipe.setOrigin(0, 1);
+      topPipe.setFlipY(true);
+      topPipe.setDisplaySize(52, gapY);
+      topPipe.body.allowGravity = false;
+      topPipe.setVelocityX(-200);
+      topPipe.body.immovable = true;
+
+      const bottomPipeY = gapY + gapSize;
+      const bottomHeight = config.height - bottomPipeY;
+
+      const bottomPipe = pipes.create(pipeX, bottomPipeY, 'pipe');
+      bottomPipe.setOrigin(0, 0);
+      bottomPipe.setDisplaySize(52, bottomHeight);
+      bottomPipe.body.allowGravity = false;
+      bottomPipe.setVelocityX(-200);
+      bottomPipe.body.immovable = true;
+
       if (!gameOver) {
         score++;
         scoreText.setText('Puntos: ' + score);
@@ -133,6 +258,11 @@
     function hitPipe() {
       if (gameOver) return;
       gameOver = true;
+
+      // Detener tuberías
+      pipes.children.iterate(pipe => {
+        pipe.setVelocityX(0);
+      });
       saveScore();
     }
 
@@ -140,6 +270,8 @@
       try {
         await saveGameSession(token, 'Flappy Bird', score * 10);
         alert('Puntuación guardada: ' + (score * 10));
+        game.scene.scenes[0].physics.pause(); // Detener físicas tras guardar
+        restartButton.style.display = 'block';  // Mostrar botón reiniciar
       } catch (e) {
         alert('Error guardando puntuación: ' + e.message);
         if (e.message.toLowerCase().includes('unauthorized')) {
