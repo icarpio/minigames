@@ -17,14 +17,16 @@
       color: #eee;
       font-family: Arial, sans-serif;
     }
-
-    #game-container {
-      border: 4px solid #4caf50;
-      border-radius: 15px;
-      box-shadow: 0 0 20px #4caf50;
-      max-width: 100vw;
-      max-height: 80vh;
-    }
+#game-container {
+  border: 4px solid #4caf50;
+  border-radius: 15px;
+  box-shadow: 0 0 20px #4caf50;
+  max-width: 600px; /* o el valor que funcione para tu diseño */
+  width: 100%;
+  height: auto;
+  margin: 40px auto; /* centra horizontalmente y agrega separación */
+  padding: 20px;
+}
 
     #scoreDisplay {
       text-align: center;
@@ -32,6 +34,14 @@
       font-size: 1.5rem;
       color: #4caf50;
     }
+
+    @media (min-width: 768px) {
+  #game-container {
+    max-width: 800px;
+    height: auto;
+    margin: 60px auto;
+  }
+}
   </style>
 </head>
 <body>
@@ -169,6 +179,7 @@
 
       async gameOver() {
         alert(`Juego terminado! Tu puntuación fue: ${this.score}`);
+
         try {
           await saveGameSession(token, 'Simon Game', this.score);
           console.log(`Puntos guardados: ${this.score}`)

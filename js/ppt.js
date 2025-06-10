@@ -11,6 +11,9 @@ const scoreDiv = document.getElementById('score');
 const restartBtn = document.getElementById('restartBtn');
 const buttons = document.querySelectorAll('.choice-btn');
 
+// Ocultar el botón reiniciar al iniciar
+restartBtn.style.display = 'none';
+
 buttons.forEach(btn => {
   btn.addEventListener('click', () => {
     if (round > maxRounds) return;
@@ -52,7 +55,17 @@ function getResult(player, cpu) {
 
 function endGame() {
   buttons.forEach(btn => btn.disabled = true);
-  resultDiv.textContent += ` | Juego terminado. Total: ${points} puntos.`;
+
+ if (points < 0) {
+  points -= 400;
+  resultDiv.innerHTML += ` <span style="color: red; font-weight: bold;">| Tu puntuación fue negativa. Se aplicó una penalización de 400 puntos.</span>`;
+} else if (points === 0) {
+  resultDiv.innerHTML += ` <span style="color: gray; font-weight: bold;">| Empate 🤝. Sigue jugando...</span>`;
+} else {
+  resultDiv.innerHTML += ` <span style="color: #0a8a0a; font-weight: bold;">| ¡Felicidades 🎉🎉! Has ganado ${points} puntos.</span>`;
+}
+
+  //resultDiv.textContent += ` | Juego terminado. Total: ${points} puntos.`;
   restartBtn.style.display = "inline-block";
 
   const token = localStorage.getItem('token');
@@ -61,19 +74,19 @@ function endGame() {
     return;
   }
 
-  saveGameSession(token, "Piedra Papel Tijera", points)
+  saveGameSession(token, "PPT", points)
     .then(() => console.log("Puntuación guardada."))
     .catch(err => console.error("Error al guardar:", err));
 }
 
+// Listener para reiniciar el juego
 restartBtn.addEventListener('click', () => {
   round = 1;
   points = 0;
   roundDiv.textContent = `Ronda: 1 / ${maxRounds}`;
+  scoreDiv.textContent = `Puntos: 0`;
   resultDiv.textContent = 'Haz tu elección';
-  scoreDiv.textContent = 'Puntos: 0';
-  restartBtn.style.display = "none";
-  buttons.forEach(btn => {
-    btn.disabled = false;
-  });
+  restartBtn.style.display = 'none';
+
+  buttons.forEach(btn => btn.disabled = false);
 });

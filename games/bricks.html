@@ -1,201 +1,65 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Arkanoid Phaser</title>
-<script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
-<style>
-  body {
-    margin: 0;
-    background: linear-gradient(to bottom, #111, #444);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: white;
-    font-family: Arial, sans-serif;
-    user-select: none;
-  }
-  #game-container {
-    border: 4px solid #0f9;
-    border-radius: 12px;
-    box-shadow: 0 0 20px #0f9;
-  }
-  #scoreDisplay {
-    text-align: center;
-    margin-top: 10px;
-    font-size: 1.5rem;
-  }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Arkanoid</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(to bottom, #111, #444);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: Arial, sans-serif;
+      user-select: none;
+      color: white;
+    }
+
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 1000px;
+      padding: 10px;
+    }
+
+    #game-container {
+      border: 4px solid #0f9;
+      border-radius: 12px;
+      box-shadow: 0 0 20px #0f9;
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 4/3;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+      display: block;
+    }
+
+    #scoreDisplay {
+      text-align: center;
+      margin-top: 12px;
+      font-size: 1.5rem;
+    }
+  </style>
 </head>
 <body>
-
-<div>
+<div class="main-container">
   <div id="game-container"></div>
   <div id="scoreDisplay">Puntuación: 0</div>
 </div>
 
-<script type="module">
-
-  import { saveGameSession } from '../js/api.js';
-
-  const token = (localStorage.getItem('token') || '').trim();
-  if (!token) {
-    alert('No has iniciado sesión. Serás redirigido al login.');
-    window.location.href = 'login.html';
-  }
-
-  class Arkanoid extends Phaser.Scene {
-    constructor() {
-      super({ key: 'Arkanoid' });
-      this.score = 0;
-      this.scoreText = null;
-      this.isGameOver = false;
-    }
-
-    preload() {
-      this.load.image('ball', 'https://i.imgur.com/9xzo6Uf.png'); // bola pequeña
-      this.load.image('paddle', 'https://i.imgur.com/Nd2nHqJ.png'); // barra
-      this.load.image('brick', 'https://i.imgur.com/sHYUcm7.png'); // ladrillo
-    }
-
-    create() {
-      this.isGameOver = false;
-      this.score = 0;
-      this.scoreText = document.getElementById('scoreDisplay');
-      this.scoreText.textContent = `Puntuación: ${this.score}`;
-
-      // Crear barra
-      this.paddle = this.physics.add.sprite(400, 570, 'paddle').setImmovable();
-      this.paddle.body.allowGravity = false;
-      this.paddle.setCollideWorldBounds(true);
-
-      // Crear bola
-      this.ball = this.physics.add.sprite(400, 540, 'ball');
-      this.ball.setCollideWorldBounds(true);
-      this.ball.setBounce(1);
-      this.ball.setVelocity(150, -150);
-
-      // Crear ladrillos
-      this.bricks = this.physics.add.staticGroup();
-
-      const rows = 5;
-      const cols = 10;
-      const offsetX = 80;
-      const offsetY = 100;
-      const brickWidth = 64;
-      const brickHeight = 32;
-
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          const x = offsetX + col * (brickWidth + 10);
-          const y = offsetY + row * (brickHeight + 10);
-          this.bricks.create(x, y, 'brick').setOrigin(0, 0);
-        }
-      }
-
-      // Colisiones
-      this.physics.add.collider(this.ball, this.paddle, this.hitPaddle, null, this);
-      this.physics.add.collider(this.ball, this.bricks, this.hitBrick, null, this);
-
-      // Control con mouse
-      this.input.on('pointermove', pointer => {
-        this.paddle.x = Phaser.Math.Clamp(pointer.x, 52, 748);
-      });
-
-      // Control con teclado
-      this.cursors = this.input.keyboard.createCursorKeys();
-    }
-
-    update() {
-      if (this.isGameOver) return;
-
-      // Control teclado
-      if (this.cursors.left.isDown) {
-        this.paddle.x -= 7;
-      } else if (this.cursors.right.isDown) {
-        this.paddle.x += 7;
-      }
-      this.paddle.x = Phaser.Math.Clamp(this.paddle.x, 52, 748);
-
-      // Revisar si la bola cae fuera (abajo)
-      if (this.ball.y > 600) {
-        this.gameOver();
-      }
-    }
-
-    hitPaddle(ball, paddle) {
-      // Cambia la velocidad horizontal según dónde golpea la bola en la barra
-      const diff = ball.x - paddle.x;
-      ball.setVelocityX(diff * 10);
-    }
-
-    hitBrick(ball, brick) {
-      brick.disableBody(true, true);
-      this.score += 10;
-      this.scoreText.textContent = `Puntuación: ${this.score}`;
-
-      // Si todos los ladrillos destruidos, gana
-      if (this.bricks.countActive() === 0) {
-        this.winGame();
-      }
-    }
-
-    async gameOver() {
-      this.isGameOver = true;
-      alert(`¡Juego terminado! Tu puntuación: ${this.score}`);
-
-      try {
-        await saveGameSession(token, 'Arkanoid', this.score);
-        console.log('Puntuación guardada correctamente');
-      } catch (e) {
-        alert('Error guardando puntuación: ' + e.message);
-        if (e.message.toLowerCase().includes('unauthorized')) {
-          localStorage.clear();
-          window.location.href = 'login.html';
-        }
-      }
-      this.scene.restart();
-    }
-
-    async winGame() {
-      this.isGameOver = true;
-      alert(`¡Felicidades! ¡Ganaste con ${this.score} puntos!`);
-
-      try {
-        await saveGameSession(token, 'Arkanoid', this.score);
-        console.log('Puntuación guardada correctamente');
-      } catch (e) {
-        alert('Error guardando puntuación: ' + e.message);
-        if (e.message.toLowerCase().includes('unauthorized')) {
-          localStorage.clear();
-          window.location.href = 'login.html';
-        }
-      }
-      this.scene.restart();
-    }
-  }
-
-  const config = {
-    type: Phaser.AUTO,
-    parent: 'game-container',
-    width: 800,
-    height: 600,
-    physics: {
-      default: 'arcade',
-      arcade: {
-        gravity: { y: 0 },
-        debug: false,
-      }
-    },
-    scene: Arkanoid,
-    backgroundColor: '#222'
-  };
-
-  const game = new Phaser.Game(config);
-
-</script>
+<script type="module" src="../js/bricks.js"></script>
 
 </body>
 </html>
