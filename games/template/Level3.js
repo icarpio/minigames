@@ -1,18 +1,40 @@
+import GameState from './GameState.js';
+
 export default class Level1 extends Phaser.Scene {
   constructor() {
     super('Level3');
   }
 
   create() {
-    this.score = 0;
-    this.scoreText = document.getElementById('scoreDisplay');
-    this.scoreText.textContent = 'Puntuación: 0';
+    // Mostrar HUD
+    this.scoreText = this.add.text(10, 10, `Score: ${GameState.score}`, { fontSize: '16px', fill: '#fff' });
+    this.livesText = this.add.text(10, 30, `Lives: ${GameState.lives}`, { fontSize: '16px', fill: '#fff' });
 
-    // Ejemplo de contenido: simplemente pasa al siguiente nivel
-    this.add.text(400, 250, 'Nivel 3', { fontSize: '24px', fill: '#fff' }).setOrigin(0.5);
-
+    // Simular ganar puntos o perder vidas
     this.time.delayedCall(2000, () => {
-      this.scene.start('Level2'); // Cambia a siguiente nivel
+      GameState.addScore(100);
+      GameState.loseLife();
+      GameState.addItem({ name: 'Poción', texture: 'potion' });
+
+      // Ir al siguiente nivel
+      this.scene.start('WinScreen');
     });
+    // Botón para abrir inventario
+    const openButton = this.add.text(700, 20, 'Inventario', { fontSize: '20px', backgroundColor: '#000', padding: 10 })
+      .setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => {
+        const hud = this.scene.get('InventoryHUD');
+        if (!hud.inventoryPanel.isOpen) {
+          hud.inventoryPanel.togglePanel();
+        }
+      });
   }
+
+
+  update() {
+    // Actualizar texto si lo necesitas dinámicamente
+    this.scoreText.setText(`Score: ${GameState.score}`);
+    this.livesText.setText(`Lives: ${GameState.lives}`);
+  }
+  
 }

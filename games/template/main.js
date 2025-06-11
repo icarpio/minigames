@@ -3,6 +3,8 @@ import Level1 from '../Level1.js';
 import Level2 from '../Level2.js';
 import Level3 from '../Level3.js';
 import WinScreen from '../WinScreen.js';
+import InventoryHUD from '../InventoryHUD.js';
+import MobileControls from '../MobileControls.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -20,7 +22,7 @@ const config = {
       debug: false
     }
   },
-  scene: [Menu, Level1, Level2, Level3,WinScreen],
+  scene: [Menu, InventoryHUD,MobileControls,Level1, Level2, Level3,WinScreen],
   backgroundColor: '#222'
 };
 
