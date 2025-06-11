@@ -38,8 +38,7 @@
 </style>
 </head>
 <body>
-
-<h1>Pong contra IA</h1>
+<h1>Pong</h1>
 <div id="score">Jugador: 0 | IA: 0</div>
 <canvas id="pong" width="600" height="400"></canvas>
 <div id="message"></div>
@@ -61,17 +60,52 @@ if (!token) {
   window.location.href = 'login.html';
 }
 
-// Juego variables
-const paddleWidth = 10;
-const paddleHeight = 100;
-const ballRadius = 8;
+// Cargar sprites
+const paddlePlayerImg = new Image();
+paddlePlayerImg.src = '../assets/img/paddle.png';
+
+const paddleAiImg = new Image();
+paddleAiImg.src = '../assets/img/paddle_enemy.png';
+
+const ballImg = new Image();
+ballImg.src = '../assets/img/bullet.png';
+
+let imagesLoaded = 0;
+const totalImages = 3;
+
+[paddlePlayerImg, paddleAiImg, ballImg].forEach(img => {
+  img.onload = () => {
+    imagesLoaded++;
+    if (imagesLoaded === totalImages) {
+      startBtn.disabled = false;
+    }
+  };
+});
+
+startBtn.disabled = true;
+
+// Escala para sprites
+const scale = 0.2;
+const ballScale = 0.30; // más grande que 0.3
+
+// Variables del juego ajustadas al tamaño del sprite escalado y rotado
+let paddleWidth, paddleHeight, ballWidth, ballHeight;
+
+function updateSpriteSizes() {
+  // Intercambiamos ancho/alto por rotación 90°
+  paddleWidth = paddlePlayerImg.height * scale;  // altura original pasa a ser ancho tras rotar
+  paddleHeight = paddlePlayerImg.width * scale;  // ancho original pasa a ser alto tras rotar
+  ballWidth = ballImg.width * ballScale;
+  ballHeight = ballImg.height * ballScale;
+}
+
+// Variables del juego
 const winScore = 5;
 
 let playerScore = 0;
 let aiScore = 0;
 
-let playerY = canvas.height / 2 - paddleHeight / 2;
-let aiY = playerY;
+let playerY, aiY;
 
 let ballX, ballY;
 let ballSpeedX, ballSpeedY;
@@ -82,13 +116,18 @@ let isPlaying = false;
 let startTime;
 let timerInterval;
 
-// Control jugador
-let mouseY = playerY;
+// Movimiento jugador
+let mouseY;
+
+function resetPositions() {
+  playerY = canvas.height / 2 - paddleHeight / 2;
+  aiY = playerY;
+  mouseY = playerY;
+}
 
 function resetBall() {
   ballX = canvas.width / 2;
   ballY = canvas.height / 2;
-  // Velocidad inicial aleatoria (derecha o izquierda)
   ballSpeedX = (Math.random() > 0.5 ? 1 : -1) * 4;
   ballSpeedY = (Math.random() * 4 - 2);
 }
@@ -98,76 +137,79 @@ function drawRect(x, y, w, h, color) {
   ctx.fillRect(x, y, w, h);
 }
 
-function drawCircle(x, y, r, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI*2);
-  ctx.fill();
-}
-
 function drawNet() {
   ctx.fillStyle = 'white';
   const netWidth = 2;
   const netHeight = 10;
-  for(let i=0; i < canvas.height; i += 15) {
-    ctx.fillRect(canvas.width/2 - netWidth/2, i, netWidth, netHeight);
+  for (let i = 0; i < canvas.height; i += 15) {
+    ctx.fillRect(canvas.width / 2 - netWidth / 2, i, netWidth, netHeight);
   }
 }
 
 function draw() {
-  // Fondo
-  drawRect(0, 0, canvas.width, canvas.height, 'black');
+  drawRect(0, 0, canvas.width, canvas.height, 'black'); // Fondo
   drawNet();
 
-  // Paletas
-  drawRect(0, playerY, paddleWidth, paddleHeight, 'white');
-  drawRect(canvas.width - paddleWidth, aiY, paddleWidth, paddleHeight, 'white');
+  // Paddle jugador (izquierda)
+  ctx.save();
+  // Trasladamos al centro del paddle para rotar alrededor de su centro
+  ctx.translate(paddleWidth / 2, playerY + paddleHeight / 2);
+  ctx.rotate(-Math.PI / 2); // Rotar -90° para vertical
+  // Dibujamos sin escala porque ya se aplica en dimensiones
+  ctx.drawImage(paddlePlayerImg, -paddlePlayerImg.width * scale / 2, -paddlePlayerImg.height * scale / 2, paddlePlayerImg.width * scale, paddlePlayerImg.height * scale);
+  ctx.restore();
+
+  // Paddle IA (derecha)
+  ctx.save();
+  ctx.translate(canvas.width - paddleWidth / 2, aiY + paddleHeight / 2);
+  ctx.rotate(-Math.PI / 2);
+  ctx.drawImage(paddleAiImg, -paddleAiImg.width * scale / 2, -paddleAiImg.height * scale / 2, paddleAiImg.width * scale, paddleAiImg.height * scale);
+  ctx.restore();
 
   // Bola
-  drawCircle(ballX, ballY, ballRadius, 'white');
+  ctx.drawImage(ballImg, ballX - ballWidth / 2, ballY - ballHeight / 2, ballWidth, ballHeight);
 }
 
 function update() {
   if (!isPlaying) return;
 
-  // Mover bola
+  // Movimiento de la bola
   ballX += ballSpeedX;
   ballY += ballSpeedY;
 
-  // Rebotes superior e inferior
-  if (ballY + ballRadius > canvas.height || ballY - ballRadius < 0) {
+  // Rebote superior/inferior
+  if (ballY + ballHeight / 2 > canvas.height || ballY - ballHeight / 2 < 0) {
     ballSpeedY = -ballSpeedY;
   }
 
-  // IA sigue bola con cierta dificultad
-  const aiCenter = aiY + paddleHeight/2;
+  // Movimiento IA
+  const aiCenter = aiY + paddleHeight / 2;
   if (aiCenter < ballY - 10) aiY += 4;
   else if (aiCenter > ballY + 10) aiY -= 4;
-  // Limitar dentro del canvas
+
+  // Limitar IA dentro del canvas
   if (aiY < 0) aiY = 0;
   if (aiY + paddleHeight > canvas.height) aiY = canvas.height - paddleHeight;
 
-  // Rebote con paletas
-  if (ballX - ballRadius < paddleWidth) {
+  // Rebote con paleta jugador
+  if (ballX - ballWidth / 2 < paddleWidth) {
     if (ballY > playerY && ballY < playerY + paddleHeight) {
       ballSpeedX = -ballSpeedX;
-      // Aumentar velocidad para dificultad progresiva
       ballSpeedX *= 1.05;
       ballSpeedY *= 1.05;
     } else {
-      // Punto para IA
       aiScore++;
       resetBall();
     }
   }
 
-  if (ballX + ballRadius > canvas.width - paddleWidth) {
+  // Rebote con paleta IA
+  if (ballX + ballWidth / 2 > canvas.width - paddleWidth) {
     if (ballY > aiY && ballY < aiY + paddleHeight) {
       ballSpeedX = -ballSpeedX;
       ballSpeedX *= 1.05;
       ballSpeedY *= 1.05;
     } else {
-      // Punto para jugador
       playerScore++;
       resetBall();
     }
@@ -176,7 +218,6 @@ function update() {
   // Actualizar marcador
   scoreDisplay.textContent = `Jugador: ${playerScore} | IA: ${aiScore}`;
 
-  // Comprobar ganador
   if (playerScore >= winScore || aiScore >= winScore) {
     isPlaying = false;
     stopTimer();
@@ -195,7 +236,6 @@ function gameLoop() {
 }
 
 function saveScore(score) {
-  // score * 10 según petición
   saveGameSession(token, 'Pong', score * 10)
     .then(() => console.log('Puntuación guardada correctamente'))
     .catch(e => {
@@ -218,7 +258,7 @@ function stopTimer() {
   clearInterval(timerInterval);
 }
 
-// Mover paleta jugador con ratón
+// Movimiento con ratón
 canvas.addEventListener('mousemove', (e) => {
   const rect = canvas.getBoundingClientRect();
   mouseY = e.clientY - rect.top - paddleHeight / 2;
@@ -227,7 +267,10 @@ canvas.addEventListener('mousemove', (e) => {
   playerY = mouseY;
 });
 
+// Iniciar juego
 startBtn.addEventListener('click', () => {
+  updateSpriteSizes();
+  resetPositions();
   playerScore = 0;
   aiScore = 0;
   messageDisplay.textContent = '';
@@ -237,7 +280,8 @@ startBtn.addEventListener('click', () => {
   isPlaying = true;
   gameLoop();
 });
-
 </script>
+
+
 </body>
 </html>

@@ -16,7 +16,7 @@ class Arkanoid extends Phaser.Scene {
 
   preload() {
     this.load.image('ball', '../assets/img/bullet.png');
-    this.load.image('paddle', '../assets/img/brick_color.png');
+    this.load.image('paddle', '../assets/img/paddle.png');
     this.load.image('brick', '../assets/img/brick_color.png');
   }
 

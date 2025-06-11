@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cocodrilo Sacamuelas Mejorado</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #2a4d2a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 20px;
+      color: #eee;
+      user-select: none;
+    }
+
+    h1 {
+      margin-bottom: 5px;
+      text-align: center;
+    }
+
+    #turn-indicator {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 22px;
+      text-align: center;
+    }
+
+    #message {
+      font-size: 20px;
+      min-height: 40px;
+      margin-top: 20px;
+      margin-bottom: 15px;
+      text-align: center;
+      padding: 0 10px;
+    }
+
+    #mouth {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  min-width: 300px;
+  height: auto;
+  aspect-ratio: 13 / 5.5;
+  perspective: 800px;
+  transition: transform 0.5s ease;
+}
+
+    #upper-jaw, #lower-jaw {
+      position: absolute;
+      width: 100%;
+      height: 50%;
+      transition: transform 0.6s ease, background 0.6s ease;
+    }
+
+    #upper-jaw {
+      top: 0;
+      border-radius: 260px 260px 0 0 / 120px 120px 0 0;
+      transform-origin: bottom center;
+      z-index: 2;
+    }
+
+    #lower-jaw {
+      bottom: 0;
+      border-radius: 0 0 260px 260px / 0 0 120px 120px;
+      transform-origin: top center;
+      z-index: 1;
+    }
+
+    #mouth:not(.open-red):not(.closed) #upper-jaw,
+    #mouth:not(.open-red):not(.closed) #lower-jaw {
+      background: linear-gradient(180deg, #2e6b2e 0%, #1b3d1b 100%);
+      box-shadow: inset 0 10px 30px #154015;
+    }
+
+    #mouth.open-red #upper-jaw,
+    #mouth.open-red #lower-jaw {
+      background: linear-gradient(180deg, #d63737 0%, #a52525 100%) !important;
+      box-shadow: inset 0 10px 30px #6a1212 !important;
+      transform: scale(1.1);
+    }
+
+    #mouth.closed #upper-jaw,
+    #mouth.closed #lower-jaw {
+      background: linear-gradient(180deg, #3ca63c 0%, #236823 100%) !important;
+      box-shadow: inset 0 10px 30px #184518 !important;
+    }
+
+    #mouth.closed #upper-teeth,
+    #mouth.closed #lower-teeth {
+      display: none;
+    }
+
+    #upper-teeth, #lower-teeth {
+      position: absolute;
+      left: 5%;
+      width: 90%;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      z-index: 3;
+    }
+
+    #upper-teeth {
+      top: 35%;
+    }
+
+    #lower-teeth {
+      bottom: 35%;
+    }
+
+    .tooth {
+      position: relative;
+      width: 8vw;
+      max-width: 22px;
+      height: auto;
+      cursor: pointer;
+      background: transparent;
+      border: none;
+    }
+
+    .tooth .triangle {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4vw solid transparent;
+      border-right: 4vw solid transparent;
+      border-bottom: 9vw solid white;
+      max-width: 22px;
+      max-height: 45px;
+      border-radius: 3px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    .molar {
+      width: 10vw;
+      max-width: 35px;
+      height: 10vw;
+      max-height: 35px;
+      background: white;
+      border-radius: 8px 8px 15px 15px;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+      margin-top: 10px;
+      cursor: pointer;
+    }
+
+    .tooth.disabled .triangle,
+    .molar.disabled {
+      background-color: #aaa !important;
+      border-bottom-color: #aaa !important;
+      box-shadow: none;
+      cursor: not-allowed;
+    }
+
+    #mouth.closed #upper-jaw {
+      transform: rotateX(-60deg);
+    }
+
+    #mouth.closed #lower-jaw {
+      transform: rotateX(60deg);
+    }
+
+    #restart-btn {
+      display: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+      width: 90%;
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+
+    #eyes {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  margin-bottom: 10px;
+}
+
+.eye {
+  width: 50px;
+  height: 50px;
+  background: white;
+  border-radius: 50%;
+  position: relative;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.pupil {
+  width: 20px;
+  height: 20px;
+  background: black;
+  border-radius: 50%;
+  position: absolute;
+  top: 15px;
+  left: 15px;
+}
+#upper-teeth .triangle {
+  transform: translateX(-50%) rotate(180deg);
+  top: 10px;
+  bottom: auto;
+}
+
+    @media (max-width: 480px) {
+      #turn-indicator {
+        font-size: 18px;
+      }
+
+      #message {
+        font-size: 16px;
+      }
+
+      .molar {
+        border-radius: 6px 6px 10px 10px;
+      }
+    }
+
+    @media (min-width: 768px) {
+  .tooth .triangle {
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-bottom: 45px solid white;
+  }
+
+  .molar {
+    width: 35px;
+    height: 35px;
+  }
+}
+  </style>
+</head>
+<body>
+
+<h1>Cocodrilo Sacamuelas</h1>
+<div><br></div>
+<div id="turn-indicator">Turno: Jugador</div>
+<div><br></div>
+<div id="eyes">
+  <div class="eye">
+    <div class="pupil"></div>
+  </div>
+  <div class="eye">
+    <div class="pupil"></div>
+  </div>
+</div>
+<div><br></div>
+<div id="mouth">
+  <div id="upper-jaw">
+    <div id="upper-teeth" class="teeth-row"></div>
+  </div>
+  <div id="lower-jaw">
+    <div id="lower-teeth" class="teeth-row"></div>
+  </div>
+</div>
+<div id="message"></div>
+<button id="restart-btn">Reiniciar Juego</button>
+
+<script>
+  const NUM_TEETH = 20;
+  const upperTeethContainer = document.getElementById('upper-teeth');
+  const lowerTeethContainer = document.getElementById('lower-teeth');
+  const mouth = document.getElementById('mouth');
+  const message = document.getElementById('message');
+  const restartBtn = document.getElementById('restart-btn');
+  const turnIndicator = document.getElementById('turn-indicator');
+
+  let badToothIndex = null;
+  let teeth = [];
+  let playerTurn = true;
+  let gameOver = false;
+
+  function createTeeth() {
+    upperTeethContainer.innerHTML = '';
+    lowerTeethContainer.innerHTML = '';
+    teeth = [];
+
+    for (let i = 0; i < 10; i++) {
+      const isMolar = (i === 0 || i === 1 || i === 8 || i === 9);
+      const tooth = createTooth(i, true, isMolar);
+      upperTeethContainer.appendChild(tooth.button);
+      teeth.push(tooth);
+    }
+
+    for (let i = 10; i < 20; i++) {
+      const isMolar = (i === 10 || i === 11 || i === 18 || i === 19);
+      const tooth = createTooth(i, false, isMolar);
+      lowerTeethContainer.appendChild(tooth.button);
+      teeth.push(tooth);
+    }
+  }
+
+  function createTooth(index, isUpper, isMolar) {
+    const btn = document.createElement('button');
+    btn.classList.add(isMolar ? 'molar' : 'tooth');
+    btn.disabled = false;
+    btn.dataset.index = index;
+    btn.title = `Diente ${index + 1}`;
+    btn.addEventListener('click', () => playerChooseTooth(index));
+
+    if (!isMolar) {
+      const triangle = document.createElement('div');
+      triangle.classList.add('triangle');
+      btn.appendChild(triangle);
+    }
+
+    return { button: btn, index, isUpper, isMolar };
+  }
+
+  function playerChooseTooth(index) {
+    if (!playerTurn || gameOver) return;
+    const tooth = teeth[index];
+    if (tooth.button.disabled) return;
+
+    if (index === badToothIndex) {
+      disableTooth(tooth);
+      endGame('jugador');
+      return;
+    }
+
+    disableTooth(tooth);
+    message.textContent = `¡Diente ${index + 1} seguro! Ahora es turno de la IA`;
+    playerTurn = false;
+    updateTurnIndicator();
+    setTimeout(machineTurn, 1200);
+  }
+
+  function machineTurn() {
+    if (gameOver) return;
+
+    const available = teeth.filter(t => !t.button.disabled);
+    if (available.length === 0) {
+      message.textContent = '¡Empate! No quedan dientes.';
+      gameOver = true;
+      mouth.classList.remove('open-red');
+      mouth.classList.add('closed');
+      restartBtn.style.display = 'inline-block';
+      updateTurnIndicator('Juego terminado');
+      return;
+    }
+
+    const choice = available[Math.floor(Math.random() * available.length)];
+    if (choice.index === badToothIndex) {
+      disableTooth(choice);
+      endGame('IA');
+      return;
+    }
+
+    disableTooth(choice);
+    message.textContent = `La IA eligió el diente ${choice.index + 1} y está seguro. Tu turno.`;
+    playerTurn = true;
+    updateTurnIndicator();
+  }
+
+  function disableTooth(tooth) {
+    tooth.button.disabled = true;
+    tooth.button.classList.add('disabled');
+  }
+
+  function disableAllTeeth() {
+    teeth.forEach(t => disableTooth(t));
+  }
+
+  function updateTurnIndicator(text) {
+    turnIndicator.textContent = text || (playerTurn ? 'Turno: Jugador' : 'Turno: IA');
+  }
+
+  function endGame(loser) {
+    gameOver = true;
+    mouth.classList.remove('open-red');
+    mouth.classList.add('closed');
+
+    message.textContent = (loser === 'jugador')
+      ? '¡Oh no! Elegiste el diente malo. ¡Perdiste!'
+      : 'La IA eligió el diente malo. ¡Ganaste!';
+
+    restartBtn.style.display = 'inline-block';
+    disableAllTeeth();
+    updateTurnIndicator('Juego terminado');
+  }
+
+  function restartGame() {
+    gameOver = false;
+    mouth.classList.remove('closed');
+    mouth.classList.add('open-red');
+
+    message.textContent = '';
+    restartBtn.style.display = 'none';
+    playerTurn = true;
+    updateTurnIndicator();
+    createTeeth();
+    badToothIndex = Math.floor(Math.random() * NUM_TEETH);
+  }
+
+  restartBtn.addEventListener('click', restartGame);
+  restartGame();
+</script>
+
+</body>
+</html>

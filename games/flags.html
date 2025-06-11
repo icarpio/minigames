@@ -197,15 +197,12 @@ const flags = [
   { country: 'Angola', img: 'https://flagcdn.com/w80/ao.png' },
   { country: 'Antigua y Barbuda', img: 'https://flagcdn.com/w80/ag.png' },
   { country: 'Armenia', img: 'https://flagcdn.com/w80/am.png' },
-  { country: 'Australia', img: 'https://flagcdn.com/w80/au.png' },
   { country: 'Austria', img: 'https://flagcdn.com/w80/at.png' },
   { country: 'Azerbaiyán', img: 'https://flagcdn.com/w80/az.png' },
   { country: 'Bahamas', img: 'https://flagcdn.com/w80/bs.png' },
   { country: 'Barbados', img: 'https://flagcdn.com/w80/bb.png' },
   { country: 'Baréin', img: 'https://flagcdn.com/w80/bh.png' },
   { country: 'Bangladesh', img: 'https://flagcdn.com/w80/bd.png' },
-  { country: 'Barbados', img: 'https://flagcdn.com/w80/bb.png' },
-  { country: 'Bélgica', img: 'https://flagcdn.com/w80/be.png' },
   { country: 'Belice', img: 'https://flagcdn.com/w80/bz.png' },
   { country: 'Benín', img: 'https://flagcdn.com/w80/bj.png' },
   { country: 'Bielorrusia', img: 'https://flagcdn.com/w80/by.png' },
@@ -213,7 +210,6 @@ const flags = [
   { country: 'Bolivia', img: 'https://flagcdn.com/w80/bo.png' },
   { country: 'Bosnia y Herzegovina', img: 'https://flagcdn.com/w80/ba.png' },
   { country: 'Botsuana', img: 'https://flagcdn.com/w80/bw.png' },
-  { country: 'Brasil', img: 'https://flagcdn.com/w80/br.png' },
   { country: 'Brunéi', img: 'https://flagcdn.com/w80/bn.png' },
   { country: 'Bulgaria', img: 'https://flagcdn.com/w80/bg.png' },
   { country: 'Burkina Faso', img: 'https://flagcdn.com/w80/bf.png' },
@@ -222,14 +218,12 @@ const flags = [
   { country: 'Cabo Verde', img: 'https://flagcdn.com/w80/cv.png' },
   { country: 'Camboya', img: 'https://flagcdn.com/w80/kh.png' },
   { country: 'Camerún', img: 'https://flagcdn.com/w80/cm.png' },
-  { country: 'Canadá', img: 'https://flagcdn.com/w80/ca.png' },
   { country: 'Catar', img: 'https://flagcdn.com/w80/qa.png' },
   { country: 'Chad', img: 'https://flagcdn.com/w80/td.png' },
   { country: 'Perú', img: 'https://flagcdn.com/w80/pe.png' },
   { country: 'Venezuela', img: 'https://flagcdn.com/w80/ve.png' },
   { country: 'Uruguay', img: 'https://flagcdn.com/w80/uy.png' },
   { country: 'Paraguay', img: 'https://flagcdn.com/w80/py.png' },
-  { country: 'Bolivia', img: 'https://flagcdn.com/w80/bo.png' },
   { country: 'Ecuador', img: 'https://flagcdn.com/w80/ec.png' },
   { country: 'Cuba', img: 'https://flagcdn.com/w80/cu.png' },
   { country: 'República Dominicana', img: 'https://flagcdn.com/w80/do.png' },
@@ -254,9 +248,25 @@ const flags = [
   { country: 'Dinamarca', img: 'https://flagcdn.com/w80/dk.png' },
   { country: 'Suiza', img: 'https://flagcdn.com/w80/ch.png' },
   { country: 'Hungría', img: 'https://flagcdn.com/w80/hu.png' },
-  { country: 'República Checa', img: 'https://flagcdn.com/w80/cz.png' }
+  { country: 'República Checa', img: 'https://flagcdn.com/w80/cz.png' },
+  { country: 'gay', img: 'https://media.revistaad.es/photos/60c750599dad29f14a1459b0/master/w_1600,c_limit/127649.jpg'},
+  { country: 'bis', img: 'https://thenewgaytimes.com/wp-content/uploads/2020/04/Bandera-bi.png'},
+  { country: 'tra', img: 'https://images.reporteindigo.com/wp-content/uploads/2021/11/Bandera-del-orgullo-trans-%C2%BFcual-es-el-significado-de-sus-colores.jpg'},
+  { country: 'les', img: 'https://cdn.shopify.com/s/files/1/1082/1624/files/Lesbianprideflag_480x480.jpg'},
+  { country: 'pan', img: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/Pansexuality_Pride_Flag.svg/200px-Pansexuality_Pride_Flag.svg.png'},
+  { country: 'lea', img: 'https://flagstudio.co.uk/cdn/shop/products/Leather__Latex__and_BDSM_pride_-_Light_svg_f9ed98de-40a2-414a-89cb-c38e169e66cc-632505.png'},
+  { country: 'bea', img: 'https://flagstudio.co.uk/cdn/shop/products/Bear_Brotherhood_flag_svg_6d6bdce7-a9ba-4d92-8ee2-042a9f423030-717888.png'},
+  { country: 'nation', img: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Flag_of_the_United_Nations.png'},
+  { country: 'madrid', img: 'https://todobanderas.com/41149-large_default/madrid.jpg'},
+
   
+
   
+
+
+
+
+
 ];
 const gameBoard = document.getElementById('game-board');
 const scoreDisplay = document.getElementById('score');
@@ -267,7 +277,7 @@ const restartBtn = document.getElementById('restart-btn');
 let cards = [];
 let flippedCards = [];
 let matchedPairs = 0;
-let totalPairs = 9; // Cambiado a 9 pares
+let totalPairs = 15; // Cambiado a 9 pares
 
 let timer = 0;
 let timerInterval = null;
@@ -281,7 +291,7 @@ function shuffle(array) {
 }
 
 function createCards() {
-  const selectedFlags = shuffle(flags).slice(0, 9); // Pares seleccionados, cambiar tambien let totalPairs
+  const selectedFlags = shuffle(flags).slice(0, 15); // Pares seleccionados, cambiar tambien let totalPairs
   const doubled = selectedFlags.concat(selectedFlags);
 
   cards = shuffle(doubled.map((flag, index) => ({

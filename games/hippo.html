@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hipopótamo Comebolas Phaser</title>
+<style>
+  body {
+    margin: 0;
+    background: #222;
+    color: white;
+    font-family: Arial, sans-serif;
+    user-select: none;
+  }
+  #game-container {
+    margin: 0 auto;
+    display: block;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.js"></script>
+</head>
+<body>
+
+<div id="game-container"></div>
+
+<script>
+const config = {
+  type: Phaser.AUTO,
+  width: 800,
+  height: 600,
+  backgroundColor: '#333',
+  parent: 'game-container',
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 0 },
+      debug: false,
+    }
+  },
+  scene: {
+    preload,
+    create,
+    update
+  }
+};
+
+const HIPPO_COLORS = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff, 0xffa500, 0x800080];
+
+let playerHippo, aiHippo;
+let balls;
+let playerScore = 0;
+let aiScore = 0;
+let playerScoreText, aiScoreText;
+let spaceKey;
+let playerEating = false;
+let aiEating = false;
+let aiSpeed = 150;
+
+const game = new Phaser.Game(config);
+
+function preload() {
+  // Sprites base: hippo y bola
+  this.load.image('hippo', 'https://labs.phaser.io/assets/sprites/hippo.png');
+  this.load.image('ball', 'https://labs.phaser.io/assets/sprites/shinyball.png');
+}
+
+function create() {
+  // Colores aleatorios para hipopótamos
+  const playerColor = Phaser.Utils.Array.GetRandom(HIPPO_COLORS);
+  const aiColor = Phaser.Utils.Array.GetRandom(HIPPO_COLORS.filter(c => c !== playerColor));
+
+  // Hipopótamo jugador (abajo, invertido)
+  playerHippo = this.physics.add.sprite(config.width / 2, config.height - 100, 'hippo')
+    .setTint(playerColor)
+    .setScale(0.5)
+    .setFlipY(true)
+    .setImmovable(true);
+
+  // Hipopótamo IA (arriba)
+  aiHippo = this.physics.add.sprite(config.width / 2, 100, 'hippo')
+    .setTint(aiColor)
+    .setScale(0.5)
+    .setImmovable(true);
+
+  // Grupo de bolas
+  balls = this.physics.add.group();
+
+  createBalls(this);
+
+  // Puntuación en pantalla
+  playerScoreText = this.add.text(16, config.height - 40, 'Jugador: 0', { fontSize: '20px', fill: '#fff' });
+  aiScoreText = this.add.text(16, 20, 'Máquina: 0', { fontSize: '20px', fill: '#fff' });
+
+  spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+  // Colisiones bolas con bordes
+  this.physics.world.setBoundsCollision(true, true, true, true);
+
+  // Rebote bolas entre sí
+  this.physics.add.collider(balls, balls);
+
+  // Colisión bolas con hipopótamos para detectar "comer"
+  this.physics.add.overlap(playerHippo, balls, ballEatenPlayer, null, this);
+  this.physics.add.overlap(aiHippo, balls, ballEatenAI, null, this);
+}
+
+function createBalls(scene) {
+  balls.clear(true, true);
+  for (let i = 0; i < 20; i++) {
+    let x = Phaser.Math.Between(100, config.width - 100);
+    let y = Phaser.Math.Between(config.height / 2 - 50, config.height / 2 + 50);
+    let ball = balls.create(x, y, 'ball');
+    ball.setTint(Phaser.Display.Color.RandomRGB().color);
+    ball.setCircle(8);
+    ball.setBounce(1);
+    ball.setCollideWorldBounds(true);
+    ball.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-100, 100));
+  }
+}
+
+function update(time, delta) {
+  // Acción jugador: comer con espacio
+  if (Phaser.Input.Keyboard.JustDown(spaceKey) && !playerEating) {
+    playerEating = true;
+    animateEat(playerHippo, () => playerEating = false);
+  }
+
+  // IA se mueve hacia bola más cercana y "come" si está cerca
+  if (!aiEating) {
+    let targetBall = getClosestBall(aiHippo);
+    if (targetBall) {
+      this.physics.moveToObject(aiHippo, targetBall, aiSpeed);
+      const dist = Phaser.Math.Distance.Between(aiHippo.x, aiHippo.y, targetBall.x, targetBall.y);
+      if (dist < 50) {
+        aiEating = true;
+        aiHippo.body.setVelocity(0, 0);
+        animateEat(aiHippo, () => aiEating = false);
+      }
+    } else {
+      aiHippo.body.setVelocity(0, 0);
+    }
+  }
+
+  // Reiniciar bolas si se acaban
+  if (balls.countActive(true) === 0) {
+    createBalls(this);
+  }
+}
+
+function animateEat(hippo, onComplete) {
+  // Simular acción de "comer" con escala rápida (boca abierta/cerrada)
+  hippo.scene.tweens.timeline({
+    targets: hippo,
+    ease: 'Power1',
+    duration: 100,
+    tweens: [
+      { scaleY: 0.3, scaleX: 0.6 },
+      { scaleY: 0.5, scaleX: 0.5 }
+    ],
+    onComplete: onComplete
+  });
+}
+
+function ballEatenPlayer(hippo, ball) {
+  if (!playerEating) return; // Sólo come si está en modo "comer"
+  ball.disableBody(true, true);
+  playerScore++;
+  playerScoreText.setText('Jugador: ' + playerScore);
+}
+
+function ballEatenAI(hippo, ball) {
+  if (!aiEating) return; // Sólo come si está en modo "comer"
+  ball.disableBody(true, true);
+  aiScore++;
+  aiScoreText.setText('Máquina: ' + aiScore);
+}
+
+function getClosestBall(hippo) {
+  let minDist = Infinity;
+  let closestBall = null;
+  balls.children.iterate(ball => {
+    if (!ball.active) return;
+    const dist = Phaser.Math.Distance.Between(hippo.x, hippo.y, ball.x, ball.y);
+    if (dist < minDist) {
+      minDist = dist;
+      closestBall = ball;
+    }
+  });
+  return closestBall;
+}
+</script>
+
+</body>
+</html>
+
+
+<!--Cómo funciona:
+-Presiona barra espaciadora para que el hipopótamo jugador intente “comer” las bolas cercanas (con animación).
+-La IA se mueve automáticamente hacia la bola más cercana, y cuando llega a menos de 50 px, “come” con animación.
+-Las bolas rebotan dentro del área y tienen colores random.
+-Cuando se acaban las bolas, se generan 20 nuevas automáticamente.
+-Se muestra el puntaje arriba (IA) y abajo (jugador).
+-Los hipopótamos tienen colores aleatorios entre 8 fijos.-->
