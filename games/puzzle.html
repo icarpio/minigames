@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>8 Puzzle con imágenes - Más fácil y responsive</title>
+  <title>Puzzle Deslizante</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -11,7 +11,6 @@
       text-align: center;
       background: #f0f0f0;
     }
-    /* Contenedor flexible para puzzle + preview */
     .container {
       display: flex;
       justify-content: center;
@@ -28,7 +27,6 @@
       margin: 0 auto;
       width: 90vw;
       max-width: 400px;
-      max-height: 90vw;
       aspect-ratio: 1 / 1;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -59,7 +57,6 @@
     .empty {
       background: #222 !important;
       cursor: default !important;
-      text-content: '';
     }
     #moves {
       margin-top: 20px;
@@ -79,7 +76,6 @@
     #btnRestart:hover {
       background-color: #555;
     }
-    /* Preview imagen completa */
     #preview-container {
       min-width: 150px;
       max-width: 150px;
@@ -94,7 +90,6 @@
       user-select: none;
       pointer-events: none;
     }
-    /* Ajustes para pantallas pequeñas */
     @media (max-width: 400px) {
       .tile {
         font-size: 1.2rem;
@@ -120,7 +115,7 @@
 
 <div class="container">
   <div id="puzzle-wrapper">
-    <h1>8 Puzzle - Juego de Puzzle Deslizante</h1>
+    <h1>Puzzle Deslizante</h1>
     <div id="puzzle"></div>
     <div id="moves">Movimientos: 0</div>
     <button id="btnRestart">Reiniciar</button>
@@ -132,14 +127,15 @@
 </div>
 
 <script>
-  async function saveGameSession(token, game, moves) {
-    console.log(`Simulando guardado de sesión: ${game}, movimientos: ${moves}`);
+  async function saveGameSession(token, game, moves, points) {
+    console.log(`Guardando sesión: Juego: ${game}, Movimientos: ${moves}, Puntos: ${points}`);
+    // Aquí iría la llamada real al backend
   }
 
   const token = (localStorage.getItem('token') || '').trim();
   if (!token) {
     alert('No has iniciado sesión. Serás redirigido al login.');
-    window.location.href = 'login.html';
+    window.location.href = '../index.html';
   }
 
   const puzzleContainer = document.getElementById('puzzle');
@@ -149,19 +145,21 @@
 
   const size = 3;
   const totalTiles = size * size;
+  const MAX_MOVES = 100;
   let tiles = [];
   let emptyIndex = totalTiles - 1;
   let moves = 0;
   let tileElements = [];
+  let gameOver = false;
 
   const images = [
-    '../assets/img/img1.png',
-    '../assets/img/img2.png',
-    '../assets/img/img3.png',
-    '../assets/img/img4.png',
-    '../assets/img/img5.png',
-    '../assets/img/img6.png',
-    '../assets/img/img7.png'
+    '../assets/img/01.jpg',
+    '../assets/img/02.jpg',
+    '../assets/img/03.jpg',
+    '../assets/img/04.jpg',
+    '../assets/img/05.jpg',
+    '../assets/img/06.jpg',
+    '../assets/img/07.jpg'
   ];
 
   const chosenImage = images[Math.floor(Math.random() * images.length)];
@@ -171,8 +169,8 @@
     tiles = [...Array(totalTiles).keys()];
     emptyIndex = totalTiles - 1;
     moves = 0;
+    gameOver = false;
     movesDisplay.textContent = `Movimientos: ${moves}`;
-
     createTiles();
     shuffleTiles();
     renderTiles();
@@ -180,11 +178,9 @@
 
   function createTiles() {
     tileElements = [];
-
     for (let i = 0; i < totalTiles; i++) {
       const tile = document.createElement('div');
       tile.classList.add('tile');
-
       if (i === totalTiles - 1) {
         tile.classList.add('empty');
         tile.style.backgroundImage = 'none';
@@ -194,7 +190,6 @@
         tile.style.backgroundPosition = getBgPosition(i);
         tile.textContent = i + 1;
       }
-
       tile.dataset.originalIndex = i;
       tileElements.push(tile);
     }
@@ -207,38 +202,33 @@
   }
 
   function shuffleTiles() {
-    // Mezcla ligera para facilitar: 20 swaps
     for (let i = 0; i < 20; i++) {
       const idx1 = Math.floor(Math.random() * totalTiles);
       const idx2 = Math.floor(Math.random() * totalTiles);
       [tiles[idx1], tiles[idx2]] = [tiles[idx2], tiles[idx1]];
     }
     emptyIndex = tiles.indexOf(totalTiles - 1);
-
-    // Verificamos solvibilidad y que no esté resuelto
     if (isSolved()) {
-  setTimeout(() => {
-    // Mostrar toda la imagen completa (sin hueco)
-    tiles = [...Array(totalTiles).keys()]; // Poner todo ordenado
-    renderFullImage();
-    alert(`¡Felicidades! Has completado el puzzle en ${moves} movimientos.`);
-    saveScore();
-  }, 200);
-}
-
-function renderFullImage() {
-  puzzleContainer.innerHTML = '';
-  for (let i = 0; i < totalTiles; i++) {
-    const tile = document.createElement('div');
-    tile.classList.add('tile');
-    tile.style.backgroundImage = `url(${chosenImage})`;
-    tile.style.backgroundPosition = getBgPosition(i);
-    tile.textContent = ''; // Sin número
-    tile.style.cursor = 'default';
-    puzzleContainer.appendChild(tile);
+      setTimeout(() => {
+        tiles = [...Array(totalTiles).keys()];
+        renderFullImage();
+        alert(`¡Felicidades! Has completado el puzzle en ${moves} movimientos.`);
+        saveScore();
+      }, 200);
+    }
   }
-}
 
+  function renderFullImage() {
+    puzzleContainer.innerHTML = '';
+    for (let i = 0; i < totalTiles; i++) {
+      const tile = document.createElement('div');
+      tile.classList.add('tile');
+      tile.style.backgroundImage = `url(${chosenImage})`;
+      tile.style.backgroundPosition = getBgPosition(i);
+      tile.textContent = '';
+      tile.style.cursor = 'default';
+      puzzleContainer.appendChild(tile);
+    }
   }
 
   function isSolved() {
@@ -248,34 +238,11 @@ function renderFullImage() {
     return true;
   }
 
-  function isSolvable() {
-    let invCount = 0;
-    for (let i = 0; i < totalTiles - 1; i++) {
-      for (let j = i + 1; j < totalTiles; j++) {
-        if (
-          tiles[i] !== totalTiles - 1 &&
-          tiles[j] !== totalTiles - 1 &&
-          tiles[i] > tiles[j]
-        ) {
-          invCount++;
-        }
-      }
-    }
-    const emptyRowFromBottom = size - Math.floor(emptyIndex / size);
-    return size % 2 === 1
-      ? invCount % 2 === 0
-      : emptyRowFromBottom % 2 === 0
-      ? invCount % 2 === 1
-      : invCount % 2 === 0;
-  }
-
   function renderTiles() {
     puzzleContainer.innerHTML = '';
-
     for (let i = 0; i < totalTiles; i++) {
       const tileIndex = tiles[i];
       const tile = tileElements[tileIndex];
-
       tile.classList.remove('empty');
       tile.style.cursor = 'pointer';
       tile.style.border = 'none';
@@ -289,8 +256,6 @@ function renderFullImage() {
         tile.style.backgroundImage = `url(${chosenImage})`;
         tile.style.backgroundPosition = getBgPosition(tileIndex);
         tile.textContent = tileIndex + 1;
-
-        // Borde verde si la ficha está en su posición correcta
         if (tiles[i] === i) {
           tile.style.border = '3px solid limegreen';
         }
@@ -306,19 +271,12 @@ function renderFullImage() {
     const colClicked = index % size;
     const rowEmpty = Math.floor(emptyIndex / size);
     const colEmpty = emptyIndex % size;
-
-    // Puede moverse si está en la misma fila o columna que el hueco
-    if (rowClicked === rowEmpty) {
-      return Math.abs(colClicked - colEmpty) > 0;
-    }
-    if (colClicked === colEmpty) {
-      return Math.abs(rowClicked - rowEmpty) > 0;
-    }
-    return false;
+    return (rowClicked === rowEmpty && Math.abs(colClicked - colEmpty) > 0) ||
+           (colClicked === colEmpty && Math.abs(rowClicked - rowEmpty) > 0);
   }
 
   function onTileClick(clickedIndex) {
-    if (!canMove(clickedIndex)) return;
+    if (gameOver || !canMove(clickedIndex)) return;
 
     const rowClicked = Math.floor(clickedIndex / size);
     const colClicked = clickedIndex % size;
@@ -326,43 +284,33 @@ function renderFullImage() {
     const colEmpty = emptyIndex % size;
 
     if (rowClicked === rowEmpty) {
-      // Movimiento horizontal
-      if (clickedIndex < emptyIndex) {
-        // Mover las fichas hacia la derecha
-        for (let i = emptyIndex; i > clickedIndex; i--) {
-          swapTiles(i, i - 1);
-        }
-      } else {
-        // Mover las fichas hacia la izquierda
-        for (let i = emptyIndex; i < clickedIndex; i++) {
-          swapTiles(i, i + 1);
-        }
-      }
-      emptyIndex = clickedIndex;
+      for (let i = emptyIndex; i < clickedIndex; i++) swapTiles(i, i + 1);
+      for (let i = emptyIndex; i > clickedIndex; i--) swapTiles(i, i - 1);
     } else if (colClicked === colEmpty) {
-      // Movimiento vertical
-      if (rowClicked < rowEmpty) {
-        // Mover fichas hacia abajo
-        for (let i = emptyIndex; i > emptyIndex - (rowEmpty - rowClicked) * size; i -= size) {
-          swapTiles(i, i - size);
-        }
-      } else {
-        // Mover fichas hacia arriba
-        for (let i = emptyIndex; i < emptyIndex + (rowClicked - rowEmpty) * size; i += size) {
-          swapTiles(i, i + size);
-        }
-      }
-      emptyIndex = clickedIndex;
+      for (let i = emptyIndex; i < clickedIndex; i += size) swapTiles(i, i + size);
+      for (let i = emptyIndex; i > clickedIndex; i -= size) swapTiles(i, i - size);
     }
 
+    emptyIndex = clickedIndex;
     moves++;
     movesDisplay.textContent = `Movimientos: ${moves}`;
     renderTiles();
 
     if (isSolved()) {
+      gameOver = true;
       setTimeout(() => {
         alert(`¡Felicidades! Has completado el puzzle en ${moves} movimientos.`);
         saveScore();
+      }, 200);
+      return;
+    }
+
+    if (moves >= MAX_MOVES) {
+      gameOver = true;
+      setTimeout(() => {
+        alert('Has alcanzado el límite de 100 movimientos. Juego perdido.');
+        disablePuzzle();
+        saveScore(); // se guarda con 0 puntos
       }, 200);
     }
   }
@@ -371,18 +319,28 @@ function renderFullImage() {
     [tiles[i], tiles[j]] = [tiles[j], tiles[i]];
   }
 
+  function disablePuzzle() {
+    puzzleContainer.querySelectorAll('.tile').forEach(tile => {
+      tile.onclick = null;
+      tile.style.cursor = 'not-allowed';
+    });
+  }
+
+  function getScore() {
+    return isSolved() ? 2000 : 0;
+  }
+
   async function saveScore() {
     try {
-      await saveGameSession(token, '8 Puzzle', moves);
-      console.log('Puntuación guardada');
+      const points = getScore();
+      await saveGameSession(token, 'Puzzle', moves, points);
+      console.log('Puntuación guardada: ' + points);
     } catch (e) {
       alert('Error al guardar la puntuación');
     }
   }
 
   btnRestart.onclick = initPuzzle;
-
-  // Iniciar juego
   initPuzzle();
 </script>
 

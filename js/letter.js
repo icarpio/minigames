@@ -3,7 +3,7 @@ import { saveGameSession } from './api.js';
 const token = (localStorage.getItem('token') || '').trim();
 if (!token) {
   alert('No has iniciado sesión. Serás redirigido al login.');
-  window.location.href = 'login.html';
+  window.location.href = './index.html'
 }
 
 const todasLasPalabras = [
@@ -202,7 +202,7 @@ function guardarPuntuacion() {
       alert('Error guardando puntuación: ' + e.message);
       if (e.message.toLowerCase().includes('unauthorized')) {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = './index.html'
       }
     });
 }

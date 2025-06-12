@@ -3,7 +3,7 @@ import { saveGameSession } from '../js/api.js';
 const token = (localStorage.getItem('token') || '').trim();
 if (!token) {
   alert('No has iniciado sesión. Serás redirigido al login.');
-  window.location.href = 'login.html';
+  window.location.href = './index.html'
 }
 
 class Arkanoid extends Phaser.Scene {
@@ -111,7 +111,7 @@ class Arkanoid extends Phaser.Scene {
       alert('Error guardando puntuación: ' + e.message);
       if (e.message.toLowerCase().includes('unauthorized')) {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = '../index.html';
       }
     }
     this.scene.restart();
@@ -127,7 +127,7 @@ class Arkanoid extends Phaser.Scene {
       alert('Error guardando puntuación: ' + e.message);
       if (e.message.toLowerCase().includes('unauthorized')) {
         localStorage.clear();
-        window.location.href = 'login.html';
+        window.location.href = './index.html'
       }
     }
     this.scene.restart();

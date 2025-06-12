@@ -322,7 +322,7 @@ async function saveScore() {
     alert('Error guardando puntuación: ' + e.message);
     if (e.message.toLowerCase().includes('unauthorized')) {
       localStorage.clear();
-      window.location.href = 'login.html';
+      window.location.href = '../index.html';
     }
   }
 }

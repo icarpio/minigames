@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>English QUIZ</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    .main-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      max-height: 100vh;
+      padding: 10px;
+      box-sizing: border-box;
+      width: 90%;
+      max-width: 450px;
+    }
+
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+      font-size: 1.5rem;
+    }
+
+    #englandImage img {
+      max-width: 80px;
+      height: auto;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: block;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .quiz-container {
+      background: white;
+      padding: 15px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      width: 100%;
+      max-height: 520px;
+      box-sizing: border-box;
+      overflow-y: auto;
+    }
+
+    .question {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #222;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .options-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .option-btn {
+      padding: 8px 12px;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      background: white;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      text-align: left;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .option-btn.correct {
+      background-color: #4caf50;
+      color: white;
+    }
+
+    .option-btn.wrong {
+      background-color: #f44336;
+      color: white;
+    }
+
+    #progressBarContainer {
+      width: 100%;
+      background-color: #ddd;
+      height: 10px;
+      border-radius: 6px;
+      margin-bottom: 10px;
+    }
+
+    #progressBar {
+      height: 100%;
+      width: 0%;
+      background-color: #4caf50;
+      transition: width 0.4s ease;
+    }
+
+    #timer {
+      font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    #result {
+      margin-top: 10px;
+      font-weight: bold;
+      font-size: 1rem;
+      min-height: 20px;
+    }
+
+    #nextBtn, #restartBtn {
+      margin-top: 10px;
+      padding: 10px 15px;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: white;
+      cursor: pointer;
+      flex: 1;
+    }
+
+    #nextBtn:hover, #restartBtn:hover {
+      background-color: #388e3c;
+    }
+
+    #buttonsContainer {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    #summary {
+      margin-top: 10px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      padding: 10px;
+      max-height: 100px;
+      overflow-y: auto;
+      font-size: 0.9rem;
+    }
+
+    #btnHome {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      font-size: 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-top: 10px;
+      width: 100%;
+    }
+
+    /* Botón de audio con SVG visible */
+    #audioBtn {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      transition: background-color 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    #audioBtn:hover {
+      background-color: #0056b3;
+    }
+
+    /* SVG dentro del botón */
+    #audioBtn svg {
+      fill: white;
+      width: 20px;
+      height: 20px;
+    }
+
+    .correct {
+  background-color: #d4edda;
+  color: #155724;
+  border-left: 4px solid #28a745;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.incorrect {
+  background-color: #f8d7da;
+  color: #721c24;
+  border-left: 4px solid #dc3545;
+  padding: 8px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+    /* Responsive */
+    @media (max-width: 500px) {
+      .main-wrapper {
+        max-width: 100%;
+        width: 95%;
+      }
+
+      #nextBtn, #restartBtn {
+        flex-basis: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-wrapper">
+    <h1>PregunTastic</h1>
+    <div id="englandImage">
+      <img src="https://upload.wikimedia.org/wikipedia/en/a/ae/Flag_of_the_United_Kingdom.svg" alt="Bandera de Reino Unido" />
+    </div>
+
+    <div class="quiz-container">
+      <div id="progressBarContainer">
+        <div id="progressBar"></div>
+      </div>
+      <p id="timer">Tiempo: 15s</p>
+      <div class="question" id="question">
+  <span id="questionText">Pregunta ejemplo: What is your name?</span>
+  <button id="audioBtn" title="Escuchar pregunta" aria-label="Escuchar pregunta" style="cursor:pointer;">
+    🔊
+  </button>
+</div>
+      <div class="options-container" id="options"></div>
+      <div id="result"></div>
+      <div id="buttonsContainer">
+        <button id="nextBtn">Siguiente</button>
+        <button id="restartBtn">Reiniciar</button>
+      </div>
+      <div id="summary"></div>
+    </div>
+
+    <button id="btnHome" onclick="window.location.href='../home.html'">🏠</button>
+  </div>
+
+  <script type="module" src="../js/english_quiz.js"></script>
+</body>
+</html>
