@@ -2,7 +2,7 @@ export async function saveGameSession(token, gameName, scoreValue) {
   try {
     //'https://albertaapi.onrender.com/api/minigames/auth/sessions/'
     //'http://localhost:8000/api/minigames/sessions/'
-    const response = await fetch('https://albertaapi.onrender.com/api/minigames/auth/sessions/', {
+    const response = await fetch('https://albertaapi.onrender.com/api/minigames/sessions/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
