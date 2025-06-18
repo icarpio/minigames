@@ -23,20 +23,21 @@ h1 {
 /* TABLERO RESPONSIVE */
 #game-board {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-  grid-gap: 12px;
-  justify-content: center;
-  max-width: 600px; /* opcional para limitar tamaño máximo */
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  gap: 12px;
+  max-width: 600px;
   width: 100%;
+  justify-content: center;
 }
 
 /* CARTA CUADRADA Y ADAPTABLE */
 .card {
   width: 100%;
-  padding-top: 120%; /* Altura 120% del ancho para mantener proporción */
+  aspect-ratio: 1 / 1;
   perspective: 800px;
   cursor: pointer;
-  position: relative; /* para posicionar inner */
+  position: relative;
 }
 
 .card-inner {
@@ -107,16 +108,16 @@ h1 {
   cursor: pointer;
 }
 
-/* MEDIA QUERY para móvil */
 @media (max-width: 480px) {
   #game-board {
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    grid-gap: 8px;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
     max-width: 100%;
   }
 
   .card {
-    padding-top: 130%; /* un poco más alto para mejor proporción en móvil */
+    aspect-ratio: 1 / 1;
   }
 
   .card-back img {
@@ -259,13 +260,6 @@ const flags = [
   { country: 'nation', img: 'https://upload.wikimedia.org/wikipedia/commons/1/11/Flag_of_the_United_Nations.png'},
   { country: 'madrid', img: 'https://todobanderas.com/41149-large_default/madrid.jpg'},
 
-  
-
-  
-
-
-
-
 
 ];
 const gameBoard = document.getElementById('game-board');
@@ -277,7 +271,7 @@ const restartBtn = document.getElementById('restart-btn');
 let cards = [];
 let flippedCards = [];
 let matchedPairs = 0;
-let totalPairs = 15; // Cambiado a 9 pares
+let totalPairs = 8; 
 
 let timer = 0;
 let timerInterval = null;
@@ -291,7 +285,7 @@ function shuffle(array) {
 }
 
 function createCards() {
-  const selectedFlags = shuffle(flags).slice(0, 15); // Pares seleccionados, cambiar tambien let totalPairs
+  const selectedFlags = shuffle(flags).slice(0, 8); // Pares seleccionados, cambiar tambien let totalPairs
   const doubled = selectedFlags.concat(selectedFlags);
 
   cards = shuffle(doubled.map((flag, index) => ({

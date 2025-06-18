@@ -68,8 +68,9 @@ document.getElementById("registerForm").addEventListener("submit", async functio
     password: document.getElementById('password').value
   };
 
-  console.log('Enviando payload:', payload);
-
+  //onsole.log('Enviando payload:', payload);
+  
+  //'https://albertaapi.onrender.com/api/minigames/auth/register/'
   try {
     const res = await fetch('http://localhost:8000/api/minigames/auth/register/', {
       method: 'POST',

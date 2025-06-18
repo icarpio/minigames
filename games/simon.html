@@ -187,7 +187,7 @@
           alert('Error guardando puntuación: ' + e.message);
           if (e.message.toLowerCase().includes('unauthorized')) {
             localStorage.clear();
-            window.location.href = '/index.html';
+            window.location.href = '../index.html';
           }
         }
         this.startGame();

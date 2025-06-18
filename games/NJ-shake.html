@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fruit Ninja Clone - Phaser 3</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #000;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+</head>
+<body>
+<script>
+const config = {
+  type: Phaser.AUTO,
+  width: window.innerWidth,
+  height: window.innerHeight,
+  backgroundColor: '#111',
+  physics: {
+    default: 'arcade',
+    arcade: {
+      gravity: { y: 300 },
+      debug: false
+    }
+  },
+  scene: {
+    preload,
+    create,
+    update
+  },
+  scale: {
+    mode: Phaser.Scale.RESIZE,
+    autoCenter: Phaser.Scale.CENTER_BOTH
+  }
+};
+
+const game = new Phaser.Game(config);
+
+let fruits, bombs, trail;
+let score = 10;
+let scoreText;
+let isGameOver = false;
+
+const fruitTypes = [
+  { key: 'apple', url: 'https://labs.phaser.io/assets/sprites/apple.png', points: 1 },
+  { key: 'pear', url: 'https://labs.phaser.io/assets/sprites/pear.png', points: 2 },
+  { key: 'banana', url: 'https://labs.phaser.io/assets/sprites/banana.png', points: 3 },
+  { key: 'melon', url: 'https://labs.phaser.io/assets/sprites/melon.png', points: 4 }
+];
+
+function preload() {
+  fruitTypes.forEach(fruit => this.load.image(fruit.key, fruit.url));
+  this.load.image('bomb', 'https://labs.phaser.io/assets/sprites/bomb.png');
+  this.load.image('trail', 'https://labs.phaser.io/assets/particles/yellow.png');
+}
+
+function create() {
+  fruits = this.physics.add.group();
+  bombs = this.physics.add.group();
+
+  scoreText = this.add.text(16, 16, 'Puntos: 10', {
+    fontSize: '32px',
+    fill: '#fff'
+  });
+
+  // Estela de corte
+  trail = this.add.particles('trail');
+  const trailEmitter = trail.createEmitter({
+    speed: 0,
+    lifespan: 200,
+    quantity: 1,
+    scale: { start: 0.5, end: 0 },
+    follow: null
+  });
+
+  this.input.on('pointermove', pointer => {
+    if (isGameOver) return;
+
+    const x = pointer.x;
+    const y = pointer.y;
+    trailEmitter.setPosition(x, y);
+
+    fruits.getChildren().forEach(fruit => {
+      if (fruit.active && Phaser.Geom.Intersects.RectangleToRectangle(pointer.getBounds(), fruit.getBounds())) {
+        fruit.disableBody(true, true);
+        score += fruit.points;
+        scoreText.setText('Puntos: ' + score);
+
+        this.add.tween({
+          targets: fruit,
+          alpha: 0,
+          scale: 2,
+          duration: 300,
+          onComplete: () => fruit.destroy()
+        });
+      }
+    });
+
+    bombs.getChildren().forEach(bomb => {
+      if (
+        bomb.active &&
+        !bomb.hasExploded &&
+        Phaser.Geom.Intersects.RectangleToRectangle(pointer.getBounds(), bomb.getBounds())
+      ) {
+        bomb.hasExploded = true;
+        score -= 5;
+        scoreText.setText('Puntos: ' + score);
+        this.cameras.main.shake(300, 0.02);
+
+        // No se destruye, solo se marca como explotada visualmente
+        this.tweens.add({
+          targets: bomb,
+          scaleX: 1.5,
+          scaleY: 1.5,
+          angle: 90,
+          duration: 300,
+          onComplete: () => {
+            bomb.setAlpha(0.3); // dejar visible pero inactivo
+            bomb.setVelocity(0, 300);
+          }
+        });
+
+        if (score <= 0) {
+          endGame(this);
+        }
+      }
+    });
+  });
+
+  this.time.addEvent({
+    delay: 1000,
+    callback: () => spawnObjects(this),
+    loop: true
+  });
+}
+
+function spawnObjects(scene) {
+  if (isGameOver) return;
+
+  const spawnX = Phaser.Math.Between(50, scene.scale.width - 50);
+  const isBomb = Math.random() < 0.2;
+
+  if (isBomb) {
+    const bomb = bombs.create(spawnX, scene.scale.height + 50, 'bomb');
+    bomb.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400));
+    bomb.setBounce(1);
+    bomb.hasExploded = false;
+  } else {
+    const fruitData = Phaser.Utils.Array.GetRandom(fruitTypes);
+    const fruit = fruits.create(spawnX, scene.scale.height + 50, fruitData.key);
+    fruit.points = fruitData.points;
+    fruit.setVelocity(Phaser.Math.Between(-100, 100), Phaser.Math.Between(-600, -400));
+    fruit.setBounce(1);
+  }
+}
+
+function endGame(scene) {
+  isGameOver = true;
+  scene.add.text(scene.scale.width / 2, scene.scale.height / 2, '¡GAME OVER!', {
+    fontSize: '64px',
+    fill: '#f00'
+  }).setOrigin(0.5);
+}
+
+function update() {
+  if (isGameOver) return;
+
+  fruits.getChildren().forEach(fruit => {
+    if (fruit.y > game.scale.height + 100) fruit.destroy();
+  });
+
+  bombs.getChildren().forEach(bomb => {
+    if (bomb.y > game.scale.height + 100) bomb.destroy();
+  });
+}
+</script>
+</body>
+</html>

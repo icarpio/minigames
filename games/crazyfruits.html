@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Crazy Fruits</title>
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+  <style>
+    * {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: linear-gradient(to bottom, #0a2e51, #1c497a);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: Arial, sans-serif;
+  color: #fff;
+  user-select: none;
+}
+
+.game-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 100vw;
+  padding: 10px;
+}
+
+#game-container canvas {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100vw;
+  border: 5px solid #f44336;
+  border-radius: 15px;
+  box-shadow: 0 0 30px #f44336;
+  display: block;
+}
+
+#scoreDisplay {
+  margin-top: 10px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.img-small {
+  display: block;
+  margin: 0 auto;
+  width: 200px; /* tamaño base para móvil */
+  height: auto;
+  animation: colorize 8s linear infinite;
+}
+  </style>
+</head>
+<body>
+  <div class="game-wrapper">
+     <img src="/assets/img/crazy.png" alt="Pacmania" class="img-small" />
+    <br>
+    <div id="game-container"></div>
+    <div id="scoreDisplay">Puntuación: 0</div>
+  </div>
+  <script type="module" src="../js/fruit.js"></script>
+</body>
+</html>

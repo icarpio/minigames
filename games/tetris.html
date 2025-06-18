@@ -4,11 +4,18 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
 <title>Tetris Responsive</title>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+<title>Tetris Responsive</title>
 <style>
   html, body {
-    margin: 0; 
-    padding: 0; 
-    height: 100%;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
     background: #111;
     color: #eee;
     font-family: Arial, sans-serif;
@@ -16,17 +23,22 @@
     justify-content: center;
     align-items: center;
   }
+
   #container {
     text-align: center;
     padding: 1rem;
     width: 100%;
     max-width: 480px;
+    max-height: 100vh;
     box-sizing: border-box;
+    overflow: hidden;
   }
+
   h1 {
     margin-bottom: 1rem;
     font-size: 2rem;
   }
+
   canvas#tetris {
     background: #222;
     border: 3px solid #555;
@@ -37,11 +49,13 @@
     max-height: 600px;
     touch-action: none;
   }
+
   #score {
     font-size: 1.5rem;
     margin-bottom: 1rem;
   }
-  #btnRestart {
+
+  #btnRestart, #btnHome {
     margin-top: 10px;
     padding: 10px 20px;
     font-size: 1rem;
@@ -52,27 +66,18 @@
     color: #eee;
     transition: background-color 0.3s ease;
   }
-  #btnHome{
-    margin-top: 10px;
-    padding: 10px 20px;
-    font-size: 1rem;
-    cursor: pointer;
-    border: none;
-    border-radius: 4px;
-    background-color: #444;
-    color: #eee;
-    transition: background-color 0.3s ease;
-  }
-  #btnRestart:hover {
+
+  #btnRestart:hover, #btnHome:hover {
     background-color: #666;
   }
-  /* Botones táctiles para móviles */
+
   #mobileControls {
     margin-top: 1rem;
     display: flex;
     justify-content: center;
     gap: 10px;
   }
+
   #mobileControls button {
     flex: 1;
     padding: 12px 0;
@@ -85,27 +90,28 @@
     user-select: none;
     transition: background-color 0.3s ease;
   }
+
   #mobileControls button:active {
     background-color: #555;
   }
-  @media (max-width: 400px) {
+
+  @media (max-width: 400px), (max-height: 600px) {
     h1 {
-      font-size: 1.5rem;
+      font-size: 1.3rem;
     }
     #score {
-      font-size: 1.2rem;
+      font-size: 1rem;
     }
-    #btnRestart {
-      padding: 8px 16px;
-      font-size: 0.9rem;
-    }
-    #btnHome {
-      padding: 8px 16px;
+    #btnRestart, #btnHome {
+      padding: 8px 14px;
       font-size: 0.9rem;
     }
     #mobileControls button {
       font-size: 1rem;
       padding: 10px 0;
+    }
+    canvas#tetris {
+      max-height: 300px;
     }
   }
 </style>
@@ -113,7 +119,7 @@
 <body>
 
 <div id="container">
-  <h1>Tetris Responsive</h1>
+  <h1>Tetris</h1>
   <canvas id="tetris"></canvas>
   <div id="score">Puntuación: 0</div>
   
@@ -338,20 +344,25 @@ let lastTime = 0;
 let score = 0;
 let isGameOver = false;
 
-function resizeCanvas() {
-  const container = document.getElementById('container');
-  const maxWidth = container.clientWidth;
+ function resizeCanvas() {
+    const container = document.getElementById('container');
+    const maxWidth = container.clientWidth;
+    const maxHeight = window.innerHeight - 200; // Restamos espacio para controles/texto
 
-  BLOCK_SIZE = Math.floor(maxWidth / COLS);
-  if (BLOCK_SIZE < 15) BLOCK_SIZE = 15; 
-  if (BLOCK_SIZE > 30) BLOCK_SIZE = 30;
+    // Escalar por ancho y alto
+    const blockW = Math.floor(maxWidth / COLS);
+    const blockH = Math.floor(maxHeight / ROWS);
+    BLOCK_SIZE = Math.min(blockW, blockH);
 
-  canvas.width = COLS * BLOCK_SIZE;
-  canvas.height = ROWS * BLOCK_SIZE;
+    if (BLOCK_SIZE < 15) BLOCK_SIZE = 15;
+    if (BLOCK_SIZE > 30) BLOCK_SIZE = 30;
 
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
-}
+    canvas.width = COLS * BLOCK_SIZE;
+    canvas.height = ROWS * BLOCK_SIZE;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(BLOCK_SIZE, BLOCK_SIZE);
+  }
 
 window.addEventListener('resize', () => {
   resizeCanvas();

@@ -28,7 +28,9 @@ class Arkanoid extends Phaser.Scene {
 
     const { width, height } = this.game.config;
 
-    this.paddle = this.physics.add.sprite(width / 2, height - 30, 'paddle').setImmovable();
+    this.paddle = this.physics.add.sprite(width / 2, height - 30, 'paddle')
+      .setImmovable()
+      .setScale(0.2);
     this.paddle.body.allowGravity = false;
     this.paddle.setCollideWorldBounds(true);
 
@@ -61,8 +63,10 @@ class Arkanoid extends Phaser.Scene {
     this.physics.add.collider(this.ball, this.paddle, this.hitPaddle, null, this);
     this.physics.add.collider(this.ball, this.bricks, this.hitBrick, null, this);
 
+    // Movimiento con mouse / touch corregido
     this.input.on('pointermove', pointer => {
-      this.paddle.x = Phaser.Math.Clamp(pointer.x, this.paddle.width / 2, width - this.paddle.width / 2);
+      const paddleDisplayWidth = this.paddle.displayWidth;
+      this.paddle.x = Phaser.Math.Clamp(pointer.x, paddleDisplayWidth / 2, width - paddleDisplayWidth / 2);
     });
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -72,8 +76,9 @@ class Arkanoid extends Phaser.Scene {
     if (this.isGameOver) return;
 
     const speed = 7;
-    const leftBound = this.paddle.width / 2;
-    const rightBound = this.game.config.width - this.paddle.width / 2;
+    const paddleDisplayWidth = this.paddle.displayWidth;
+    const leftBound = paddleDisplayWidth / 2;
+    const rightBound = this.game.config.width - paddleDisplayWidth / 2;
 
     if (this.cursors.left.isDown) {
       this.paddle.x = Phaser.Math.Clamp(this.paddle.x - speed, leftBound, rightBound);

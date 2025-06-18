@@ -262,7 +262,16 @@
 <div id="message"></div>
 <button id="restart-btn">Reiniciar Juego</button>
 
-<script>
+<script type="module">
+
+  import { saveGameSession } from '../js/api.js';
+  const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = '../index.html';
+  }
+
+
   const NUM_TEETH = 20;
   const upperTeethContainer = document.getElementById('upper-teeth');
   const lowerTeethContainer = document.getElementById('lower-teeth');
@@ -371,19 +380,36 @@
     turnIndicator.textContent = text || (playerTurn ? 'Turno: Jugador' : 'Turno: IA');
   }
 
-  function endGame(loser) {
-    gameOver = true;
-    mouth.classList.remove('open-red');
-    mouth.classList.add('closed');
+ function endGame(loser) {
+  gameOver = true;
+  mouth.classList.remove('open-red');
+  mouth.classList.add('closed');
 
-    message.textContent = (loser === 'jugador')
-      ? '¡Oh no! Elegiste el diente malo. ¡Perdiste!'
-      : 'La IA eligió el diente malo. ¡Ganaste!';
+  const points = (loser === 'IA') ? 400 : 0; // ← NUEVO
 
-    restartBtn.style.display = 'inline-block';
-    disableAllTeeth();
-    updateTurnIndicator('Juego terminado');
+  message.textContent = (loser === 'jugador')
+    ? '¡Oh no! Elegiste el diente malo. ¡Perdiste!'
+    : 'La IA eligió el diente malo. ¡Ganaste!';
+
+  restartBtn.style.display = 'inline-block';
+  disableAllTeeth();
+  updateTurnIndicator('Juego terminado');
+
+  saveScore(points); // ← LLAMADA A saveScore con puntos
+}
+  
+async function saveScore(points) {
+  try {
+    await saveGameSession(token, 'Cocodrile', points);
+    console.log(`Puntos guardados: ${points}`);
+  } catch (e) {
+    alert('Error guardando puntuación: ' + e.message);
+    if (e.message.toLowerCase().includes('unauthorized')) {
+      localStorage.clear();
+      window.location.href = '../index.html';
+    }
   }
+}
 
   function restartGame() {
     gameOver = false;
@@ -397,6 +423,7 @@
     createTeeth();
     badToothIndex = Math.floor(Math.random() * NUM_TEETH);
   }
+
 
   restartBtn.addEventListener('click', restartGame);
   restartGame();
