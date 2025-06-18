@@ -54,7 +54,8 @@
     document.getElementById("loginForm").addEventListener("submit", function (e) {
       e.preventDefault();
       //'https://albertaapi.onrender.com/api/minigames/auth/login/'
-      fetch('http://localhost:8000/api/minigames/auth/login/', {
+      //'http://localhost:8000/api/minigames/auth/login/'
+      fetch('https://albertaapi.onrender.com/api/minigames/auth/login/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

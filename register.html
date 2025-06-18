@@ -71,8 +71,9 @@ document.getElementById("registerForm").addEventListener("submit", async functio
   //onsole.log('Enviando payload:', payload);
   
   //'https://albertaapi.onrender.com/api/minigames/auth/register/'
+  //'http://localhost:8000/api/minigames/auth/register/'
   try {
-    const res = await fetch('http://localhost:8000/api/minigames/auth/register/', {
+    const res = await fetch('https://albertaapi.onrender.com/api/minigames/auth/register/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
