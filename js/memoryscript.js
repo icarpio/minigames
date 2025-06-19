@@ -53,6 +53,7 @@ function endGame() {
   document.querySelectorAll('button').forEach(btn => btn.disabled = true);
   alert(`¡Se acabó el tiempo! Tu puntuación final es: ${successes} aciertos.`);
   showSuccesses.textContent = `Número de aciertos: ${successes}`;
+  //Guarda datos en bbdd
   saveGameSession(token, gameName, 0)
           .then((response) => {
             console.log("Sesión guardada con éxito:", response);
@@ -85,9 +86,9 @@ function spin(id) {
       turnedButtons = 0;
       successes++;
       showSuccesses.textContent = `Número de aciertos: ${successes}`;
-
       if (successes === 8) {
         clearInterval(timer);
+        //Guarda datos en bbdd
         saveGameSession(token, gameName, scoreValue)
           .then((response) => {
             console.log("Sesión guardada con éxito:", response);
