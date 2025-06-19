@@ -1,7 +1,7 @@
 import { saveGameSession } from './api.js'; 
 import { allQuestions } from './questions.js';
 
-const totalQuestions = 7;
+const totalQuestions = 10;
 let selectedQuestions = [];
 let currentQuestion = 0;
 let score = 0;
