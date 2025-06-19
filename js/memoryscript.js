@@ -1,5 +1,5 @@
-import { saveGameSession } from './api.js';  // Ajusta la ruta si es necesario
 
+import { saveGameSession } from './api.js'; 
 // Variables
 let turnedButtons = 0;
 let firstResult = null;
@@ -22,6 +22,14 @@ let images = [
   "../assets/img/img7.png", "../assets/img/img7.png",
   "../assets/img/img8.png", "../assets/img/img8.png"
 ];
+const token = (localStorage.getItem('token') || '').trim();
+        if (!token) {
+          alert('No has iniciado sesión. Serás redirigido al login.');
+          window.location.href = '../index.html';
+        }
+
+const gameName = "Juego de Memoria";
+const scoreValue = 400;       
 
 function shuffleImages() {
   images.sort(() => Math.random() - 0.5);
@@ -45,6 +53,13 @@ function endGame() {
   document.querySelectorAll('button').forEach(btn => btn.disabled = true);
   alert(`¡Se acabó el tiempo! Tu puntuación final es: ${successes} aciertos.`);
   showSuccesses.textContent = `Número de aciertos: ${successes}`;
+  saveGameSession(token, gameName, 0)
+          .then((response) => {
+            console.log("Sesión guardada con éxito:", response);
+          })
+          .catch((error) => {
+            console.error("Error al guardar la sesión:", error);
+          });
 }
 
 function spin(id) {
@@ -73,21 +88,14 @@ function spin(id) {
 
       if (successes === 8) {
         clearInterval(timer);
-        const token = localStorage.getItem('token');
-        const gameName = "Juego de Memoria";
-        const scoreValue = 400;
-
         saveGameSession(token, gameName, scoreValue)
-          .then(() => {
-            setTimeout(() => {
-              alert("🎉¡Felicidades! Has ganado 400 puntos");
-              restartGame();
-            }, 500);
+          .then((response) => {
+            console.log("Sesión guardada con éxito:", response);
+            alert('¡Felicidades! Has completado el juego. Tu puntuación ha sido guardada.');
           })
-          .catch(error => {
-            console.error("Error guardando la puntuación:", error);
-            alert("Error guardando la puntuación");
-            restartGame();
+          .catch((error) => {
+            console.error("Error al guardar la sesión:", error);
+            alert('Hubo un problema al guardar tu puntuación. Intenta nuevamente más tarde.');
           });
       }
     } else {
@@ -101,6 +109,7 @@ function spin(id) {
     }
   }
 }
+
 
 function restartGame() {
   timeRemaining = 50;

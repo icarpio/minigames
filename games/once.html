@@ -235,15 +235,20 @@
   <script type="module">
     import { saveGameSession } from '../js/api.js'; // ajusta según donde tengas api.js
 
-    const symbols = ["⭐", "🍀", "💎", "🎲", "🍒", "🔔"];
+    const symbols = ["⭐", "🍀", "💎", "🎲", "🍒", "🔔","​​​🤡​","🤖","💀","👽"];
     const symbolScores = {
       "⭐": 10,
       "🍀": 20,
       "💎": 50,
       "🎲": 100,
       "🍒": 150,
-      "🔔": 200
+      "🔔": 200,
+      "​​​🤡​": 0,
+      "🤖": 0,
+      "💀": 0,
+      "👽": 0,
     };
+
 
     let score = 0;
     let boardSymbols = [];
@@ -512,23 +517,33 @@ const game3Symbols = [
   { type: "flower", symbol: "🌸" },
   { type: "flower", symbol: "🌺" },
   { type: "flower", symbol: "🌻" },
-  { type: "flower", symbol: "🌼" },  // nueva flor
+  { type: "flower", symbol: "🌼" },
+  { type: "flower", symbol: "​​🍄​" },
+  { type: "flower", symbol: "🐌​" },
+  { type: "flower", symbol: "​🐛​​" },
+  { type: "flower", symbol: "​​🐜​​" },
+  { type: "flower", symbol: "​​❄️​​" },
   { type: "prize", symbol: "💰" },
   { type: "prize", symbol: "🎁" },
   { type: "prize", symbol: "⭐" },
-  { type: "prize", symbol: "🏆" }   // nuevo premio
+  { type: "prize", symbol: "🏆" }  
 ];
 const game3GridSize = 12;
 
 const game3Points = {
-  "🌸": 50,
-  "🌺": 50,
-  "🌻": 50,
-  "🌼": 50,
-  "💰": 100,
-  "🎁": 150,
-  "⭐": 200,
-  "🏆": 250
+  "🌸": 30,
+  "🌺": 30,
+  "🌻": 30,
+  "🌼": 30,
+  "🍄": 50,
+  "💰": 50,
+  "🎁": 50,
+  "⭐": 100,
+  "🏆": 200,
+  "🐌​":0,
+  "​🐛​":0,
+  "​​🐜​":0,
+  "❄️​":0
 };
 
 let game3CellsData = [];
