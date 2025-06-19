@@ -22,14 +22,7 @@ let images = [
   "../assets/img/img7.png", "../assets/img/img7.png",
   "../assets/img/img8.png", "../assets/img/img8.png"
 ];
-const token = (localStorage.getItem('token') || '').trim();
-        if (!token) {
-          alert('No has iniciado sesión. Serás redirigido al login.');
-          window.location.href = '../index.html';
-        }
-
-const gameName = "Juego de Memoria";
-const scoreValue = 400;       
+     
 
 function shuffleImages() {
   images.sort(() => Math.random() - 0.5);
@@ -89,6 +82,10 @@ function spin(id) {
       if (successes === 8) {
         clearInterval(timer);
         //Guarda datos en bbdd
+       
+
+          const gameName = "Juego de Memoria";
+          const scoreValue = 400;  
         saveGameSession(token, gameName, scoreValue)
           .then((response) => {
             console.log("Sesión guardada con éxito:", response);
@@ -131,6 +128,12 @@ function restartGame() {
 
 // Al cargar el DOM, asignamos eventos y barajamos imágenes
 window.addEventListener('DOMContentLoaded', () => {
+  const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = '../index.html';
+    return;
+  }
   shuffleImages();
 
   document.querySelectorAll('button').forEach(button => {
