@@ -1,13 +1,6 @@
-
 import { saveGameSession } from './api.js'; 
 
-const token = (localStorage.getItem('token') || '').trim();
-  if (!token) {
-    alert('No has iniciado sesión. Serás redirigido al login.');
-    window.location.href = '../index.html';
-    return;
-  }
-// Variables
+// Variables globales
 let turnedButtons = 0;
 let firstResult = null;
 let secondResult = null;
@@ -29,7 +22,6 @@ let images = [
   "../assets/img/img7.png", "../assets/img/img7.png",
   "../assets/img/img8.png", "../assets/img/img8.png"
 ];
-     
 
 function shuffleImages() {
   images.sort(() => Math.random() - 0.5);
@@ -53,19 +45,21 @@ function endGame() {
   document.querySelectorAll('button').forEach(btn => btn.disabled = true);
   alert(`¡Se acabó el tiempo! Tu puntuación final es: ${successes} aciertos.`);
   showSuccesses.textContent = `Número de aciertos: ${successes}`;
-  //Guarda datos en bbdd
-  saveGameSession(token, gameName, 0)
-          .then((response) => {
-            console.log("Sesión guardada con éxito:", response);
-          })
-          .catch((error) => {
-          console.error("Error al guardar la sesión:", error);
-          alert('Error al guardar puntuación: ' + error.message);
-          if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
-            localStorage.clear();
-            window.location.href = '../index.html';
-          }
-        })
+  
+  // Guardar en base de datos
+  const gameName = "Juego de Memoria";
+  saveGameSession(token, gameName, successes)
+    .then((response) => {
+      console.log("Sesión guardada con éxito:", response);
+    })
+    .catch((error) => {
+      console.error("Error al guardar la sesión:", error);
+      alert('Error al guardar puntuación: ' + error.message);
+      if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
+        localStorage.clear();
+        window.location.href = '../index.html';
+      }
+    });
 }
 
 function spin(id) {
@@ -93,22 +87,22 @@ function spin(id) {
       showSuccesses.textContent = `Número de aciertos: ${successes}`;
       if (successes === 8) {
         clearInterval(timer);
-        //Guarda datos en bbdd
-          const gameName = "Juego de Memoria";
-          const scoreValue = 400;  
+        // Guarda datos en bbdd
+        const gameName = "Juego de Memoria";
+        const scoreValue = 400;
         saveGameSession(token, gameName, scoreValue)
           .then((response) => {
             console.log("Sesión guardada con éxito:", response);
             alert('¡Felicidades! Has completado el juego. Tu puntuación ha sido guardada.');
           })
           .catch((error) => {
-          console.error("Error al guardar la sesión:", error);
-          alert('Error al guardar puntuación: ' + error.message);
-          if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
-            localStorage.clear();
-            window.location.href = '../index.html';
-          }
-        })
+            console.error("Error al guardar la sesión:", error);
+            alert('Error al guardar puntuación: ' + error.message);
+            if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
+              localStorage.clear();
+              window.location.href = '../index.html';
+            }
+          });
       }
     } else {
       setTimeout(() => {
@@ -121,7 +115,6 @@ function spin(id) {
     }
   }
 }
-
 
 function restartGame() {
   timeRemaining = 50;
@@ -140,8 +133,17 @@ function restartGame() {
   startTimer();
 }
 
-// Al cargar el DOM, asignamos eventos y barajamos imágenes
+// Importante: envolver todo en DOMContentLoaded y hacer la validación del token aquí
 window.addEventListener('DOMContentLoaded', () => {
+  // Traer token aquí para que esté definido en todo el ámbito
+  window.token = (localStorage.getItem('token') || '').trim();
+
+  if (!window.token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = '../index.html';
+    return; // Retorna para no ejecutar el resto del script
+  }
+
   shuffleImages();
 
   document.querySelectorAll('button').forEach(button => {
