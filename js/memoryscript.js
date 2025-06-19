@@ -1,5 +1,12 @@
 
 import { saveGameSession } from './api.js'; 
+
+const token = (localStorage.getItem('token') || '').trim();
+  if (!token) {
+    alert('No has iniciado sesión. Serás redirigido al login.');
+    window.location.href = '../index.html';
+    return;
+  }
 // Variables
 let turnedButtons = 0;
 let firstResult = null;
@@ -52,8 +59,13 @@ function endGame() {
             console.log("Sesión guardada con éxito:", response);
           })
           .catch((error) => {
-            console.error("Error al guardar la sesión:", error);
-          });
+          console.error("Error al guardar la sesión:", error);
+          alert('Error al guardar puntuación: ' + error.message);
+          if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = '../index.html';
+          }
+        })
 }
 
 function spin(id) {
@@ -82,8 +94,6 @@ function spin(id) {
       if (successes === 8) {
         clearInterval(timer);
         //Guarda datos en bbdd
-       
-
           const gameName = "Juego de Memoria";
           const scoreValue = 400;  
         saveGameSession(token, gameName, scoreValue)
@@ -92,9 +102,13 @@ function spin(id) {
             alert('¡Felicidades! Has completado el juego. Tu puntuación ha sido guardada.');
           })
           .catch((error) => {
-            console.error("Error al guardar la sesión:", error);
-            alert('Hubo un problema al guardar tu puntuación. Intenta nuevamente más tarde.');
-          });
+          console.error("Error al guardar la sesión:", error);
+          alert('Error al guardar puntuación: ' + error.message);
+          if (error.message.toLowerCase().includes('invalid token') || error.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = '../index.html';
+          }
+        })
       }
     } else {
       setTimeout(() => {
@@ -128,12 +142,6 @@ function restartGame() {
 
 // Al cargar el DOM, asignamos eventos y barajamos imágenes
 window.addEventListener('DOMContentLoaded', () => {
-  const token = (localStorage.getItem('token') || '').trim();
-  if (!token) {
-    alert('No has iniciado sesión. Serás redirigido al login.');
-    window.location.href = '../index.html';
-    return;
-  }
   shuffleImages();
 
   document.querySelectorAll('button').forEach(button => {
