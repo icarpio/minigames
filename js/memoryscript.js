@@ -15,7 +15,7 @@ let timer = null;
 let images = [
   "../assets/img/img1.png", "../assets/img/img1.png",
   "../assets/img/img2.png", "../assets/img/img2.png",
-  "../assets/img/img3.png", "../assets/img/im3_.png",
+  "../assets/img/img3.png", "../assets/img/img3.png",
   "../assets/img/img4.png", "../assets/img/img4.png",
   "../assets/img/img5.png", "../assets/img/img5.png",
   "../assets/img/img6.png", "../assets/img/img6.png",
