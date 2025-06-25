@@ -6,101 +6,107 @@
 <title>Space Invaders Phaser - Responsive</title>
 <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
 <style>
-  body {
-    margin: 0;
-    background: #000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    font-family: Arial, sans-serif;
-    color: white;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  #game-container {
-    border: 3px solid #0f0;
-    border-radius: 12px;
-    background: #000;
-    touch-action: none; /* evitar scroll con gestos en canvas */
-  }
-  #scoreDisplay {
-    text-align: center;
-    margin: 10px 0;
-    font-size: 1.5rem;
-  }
+  html, body {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden; /* Evita scroll */
+  background: #000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between; /* Distribuye elementos verticalmente */
+  color: white;
+  font-family: Arial, sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
 
-  /* Controles táctiles */
-  #controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin: 10px 0 30px 0;
-    flex-wrap: wrap;
-    max-width: 640px;
-  }
-  .btn-control {
-    background: rgba(0,255,0,0.2);
-    border: 2px solid #0f0;
-    border-radius: 12px;
-    color: #0f0;
-    font-weight: bold;
-    font-size: 1.2rem;
-    padding: 14px 20px;
-    user-select: none;
-    touch-action: manipulation;
-    flex: 1 1 80px;
-    text-align: center;
-    transition: background 0.3s, color 0.3s;
-  }
-  .btn-control:active {
-    background: #0f0;
-    color: #000;
-  }
-  /* Layout especial para flechas (UP/DOWN/LEFT/RIGHT) */
-  #arrows {
-    display: grid;
-    grid-template-columns: 60px 60px 60px;
-    grid-template-rows: 60px 60px 60px;
-    gap: 8px;
-    justify-content: center;
-    align-items: center;
-    margin-right: 10px;
-  }
-  #arrows > div {
-    background: rgba(0,255,0,0.15);
-    border: 2px solid #0f0;
-    border-radius: 12px;
-    color: #0f0;
-    font-weight: bold;
-    font-size: 1.4rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    touch-action: manipulation;
-    cursor: pointer;
-  }
-  #arrows > .empty {
-    background: transparent;
-    border: none;
-    cursor: default;
-  }
+#game-container {
+  width: 100%;
+  max-width: 640px;
+  aspect-ratio: 8 / 10;
+  border: 3px solid #0f0;
+  border-radius: 12px;
+  background: #000;
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  margin: 10px 0;
+  touch-action: none;
+}
+
+#game-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+#scoreDisplay {
+  font-size: 1.5rem;
+  text-align: center;
+  margin: 5px 0;
+  flex-shrink: 0;
+}
+
+#controls {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  max-width: 640px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+#arrows {
+  display: grid;
+  grid-template-columns: 60px 60px 60px;
+  grid-template-rows: 60px 60px 60px;
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  margin-right: 10px;
+}
+
+#arrows > div {
+  background: rgba(0,255,0,0.15);
+  border: 2px solid #0f0;
+  border-radius: 12px;
+  color: #0f0;
+  font-weight: bold;
+  font-size: 1.4rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+#arrows > .empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+}
+
 #shoot-btn {
   background: rgba(0,255,0,0.15);
   border: 2px solid #0f0;
   border-radius: 12px;
   color: #0f0;
   font-weight: bold;
-  font-size: 0.9rem;               /* Más pequeño */
+  font-size: 0.9rem;
   width: 60px;
   height: 60px;
   display: flex;
   justify-content: center;
   align-items: center;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   user-select: none;
   touch-action: manipulation;
   cursor: pointer;
@@ -112,21 +118,63 @@
   background: #0f0;
   color: #000;
 }
+#menu-btn {
+  background: rgba(0,255,0,0.15);
+  border: 2px solid #0f0;
+  border-radius: 12px;
+  color: #0f0;
+  font-weight: bold;
+  font-size: 0.9rem;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  user-select: none;
+  touch-action: manipulation;
+  cursor: pointer;
+  box-sizing: border-box;
+  margin-top: 10px;
+}
 
-  /* Adaptar el tamaño canvas al ancho móvil */
-  @media (max-width: 700px) {
-  #game-container canvas {
-    width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 8 / 10; /* Proporción más vertical */
-    display: block;
+#menu-btn:active {
+  background: #0f0;
+  color: #000;
+}
+
+/* Mejora para pantallas pequeñas */
+@media (max-width: 480px), (max-height: 480px) {
+  #arrows {
+    grid-template-columns: 45px 45px 45px;
+    grid-template-rows: 45px 45px 45px;
+    gap: 6px;
+    margin-right: 6px;
+  }
+  #shoot-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 0.8rem;
+    margin-top: 6px;
+  }
+  #menu-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 0.8rem;
+    margin-top: 6px;
   }
 
-  body {
-    flex-direction: column;
-    padding-bottom: 100px;
-    height: auto;
-    overflow-y: auto;
+  #scoreDisplay {
+    font-size: 1.2rem;
+  }
+}
+
+
+/* Ocultar flechas y botón de disparo en escritorio, mantener botón de menú */
+@media (min-width: 768px) {
+  #arrows,
+  #shoot-btn {
+    display: none;
   }
 }
 
@@ -138,20 +186,26 @@
   <div id="game-container"></div>
   <div id="scoreDisplay">Puntuación: 0</div>
 
-  <div id="controls">
-    <div id="arrows">
-      <div class="empty"></div>
-      <div id="btn-up">↑</div>
-      <div class="empty"></div>
-      <div id="btn-left">←</div>
-      <div class="empty"></div>
-      <div id="btn-right">→</div>
-      <div class="empty"></div>
-      <div id="btn-down">↓</div>
-      <div class="empty"></div>
-    </div>
-    <div id="shoot-btn" class="arrow-button">SHOOT</div>
+<div id="controls">
+  <div id="arrows">
+    <div class="empty"></div>
+    <div id="btn-up">↑</div>
+    <div class="empty"></div>
+    <div id="btn-left">←</div>
+    <div class="empty"></div>
+    <div id="btn-right">→</div>
+    <div class="empty"></div>
+    <div id="btn-down">↓</div>
+    <div class="empty"></div>
   </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px;">
+    <!-- Botón de disparo con ícono -->
+    <div id="shoot-btn" class="arrow-button" title="Disparar">💥</div>
+    <!-- Botón de menú -->
+    <button id="menu-btn">☰</button>
+  </div>
+</div>
 </div>
 
 <script type="module">
@@ -211,7 +265,8 @@
       this.scoreText = document.getElementById('scoreDisplay');
       this.scoreText.textContent = `Puntuación: ${this.score}`;
 
-      this.player = this.physics.add.sprite(320, 560, 'player').setScale(0.1);
+      this.player = this.physics.add.sprite(320, 700, 'player').setScale(0.1);
+      console.log('Posición inicial del jugador:', this.player.y);
       this.player.setCollideWorldBounds(true);
 
       this.playerBullets = this.physics.add.group();

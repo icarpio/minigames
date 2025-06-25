@@ -5,6 +5,9 @@ if (!token) {
   alert('No has iniciado sesión. Serás redirigido al login.');
   window.location.href = './index.html'
 }
+ document.getElementById('homeButton').addEventListener('click', () => {
+      window.location.href = '../home.html'; 
+    });
 
 class Arkanoid extends Phaser.Scene {
   constructor() {

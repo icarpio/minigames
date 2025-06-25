@@ -75,6 +75,21 @@
     #restartBtn:hover {
       background-color: #388e3c;
     }
+      #btnHome {
+    background-color: #007bff; /* azul Bootstrap */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-bottom: 15px;
+  }
+
+  /* Efecto hover opcional */
+  #btnHome:hover {
+    background-color: #0056b3;
+  }
 
     @media (max-width: 500px) {
       .choice-btn {
@@ -97,6 +112,9 @@
   <div class="status" id="result">Haz tu elección</div>
   <div class="status" id="score">Puntos: 0</div>
   <button id="restartBtn">Reiniciar</button>
+  <button id="btnHome" onclick="window.location.href='../home.html'">
+  🏠 
+</button>
 </div>
 
 <script type="module" src="../js/ppt.js"></script>

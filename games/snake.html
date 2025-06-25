@@ -83,6 +83,22 @@ canvas {
   justify-content: center;
   cursor: pointer;
 }
+
+  #homeButton {
+    margin-top: 1rem;
+      padding: 10px 24px;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #4caf50;
+      color: #111;
+      cursor: pointer;
+    
+  }
+
+  #homeButton:hover {
+    background-color: #45a049;
+  }
   </style>
 </head>
 <body>
@@ -102,10 +118,19 @@ canvas {
   <button class="btn-control" data-dir="right">➡️</button>
 </div>
 
-<button id="btnRestart">Reiniciar Juego</button>
+<button id="btnRestart">Reiniciar</button>
+<button id="homeButton">☰</button>
+
 
 <script type="module">
   import { saveGameSession } from '../js/api.js';
+
+
+
+    document.getElementById('homeButton').addEventListener('click', () => {
+      window.location.href = '../home.html'; 
+    });
+
 
   (() => {
     const canvas = document.getElementById('gameCanvas');

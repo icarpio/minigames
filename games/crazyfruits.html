@@ -54,6 +54,23 @@ body {
   height: auto;
   animation: colorize 8s linear infinite;
 }
+#menuButton {
+  margin-top: 15px;
+  padding: 15px 30px;
+  font-size: 20px;
+  border-radius: 8px;
+  border: none;
+  background-color: #0a2e51;
+  color: #fff;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+#menuButton:hover {
+  background-color: #163f7a;
+}
   </style>
 </head>
 <body>
@@ -62,6 +79,7 @@ body {
     <br>
     <div id="game-container"></div>
     <div id="scoreDisplay">Puntuación: 0</div>
+    <button id="menuButton">Menu</button>
   </div>
   <script type="module" src="../js/fruit.js"></script>
 </body>

@@ -120,6 +120,23 @@
       pointer-events: none;
     }
 
+    #btnHome {
+    margin-top: 10px;
+    padding: 10px 20px;
+    font-size: 1rem;
+    cursor: pointer;
+    border-radius: 5px;
+    border: none;
+    background-color: #555;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+
+  #btnHome:hover {
+    background-color: #777;
+  }
+
+
     @media (max-width: 400px), (max-height: 600px) {
       .tile {
         font-size: 1.1rem;
@@ -175,6 +192,7 @@
     <div id="puzzle"></div>
     <div id="moves">Movimientos: 0</div>
     <button id="btnRestart">Reiniciar</button>
+    <button id="btnHome">☰</button>
   </div>
   <div id="preview-container">
     <h3>Vista previa</h3>
@@ -185,6 +203,10 @@
 <script type="module">
   import { saveGameSession } from '../js/api.js';
  
+  //Home Button
+   document.getElementById('btnHome').addEventListener('click', function () {
+    window.location.href = '../home.html';
+  });
 
   const token = (localStorage.getItem('token') || '').trim();
   if (!token) {

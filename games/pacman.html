@@ -1,407 +1,446 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
-    <title>Pac-Man Responsive - Phaser 3</title>
+    <title>PacMania</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
+      :root {
+        --vh: 1vh;
+      }
+
       body {
-  margin: 0;
-  background-color: black;
-  display: flex;
-  flex-direction: column; /* apila verticalmente */
-  justify-content: center; /* centra verticalmente el conjunto */
-  align-items: center;     /* centra horizontalmente */
-  height: 100vh;
-  overflow: hidden;
-  font-family: sans-serif;
-  gap: 20px; /* espacio entre imagen y juego */
-}
+        margin: 0;
+        background-color: black;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: calc(var(--vh, 1vh) * 100);
+        overflow: hidden;
+        font-family: sans-serif;
+        gap: 20px;
+      }
 
-#game-container {
-  width: 100vmin;
-  max-width: 100vw;
-  aspect-ratio: 1 / 1;
-  position: relative;
-}
+      #game-container {
+        width: 100vmin;
+        max-width: 100vw;
+        aspect-ratio: 1 / 1;
+        position: relative;
+      }
 
-#game-container canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  image-rendering: pixelated; /* Ayuda si usas sprites pixel-art */
-}
+      #game-container canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
 
-#mobile-controls {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 10;
-  display: flex;
-  justify-content: center;
-}
+      /* Botones siempre visibles */
+      #mobile-controls {
+        position: fixed;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        display: flex;
+        justify-content: center;
+      }
 
-.dpad-grid {
-  display: grid;
-  grid-template-areas:
-    ". up ."
-    "left down right";
-  grid-gap: 10px;
-  justify-items: center;
-  align-items: center;
-}
+      .dpad-grid {
+        display: grid;
+        grid-template-areas:
+          ". up ."
+          "left down right";
+        grid-gap: 10px;
+        justify-items: center;
+        align-items: center;
+      }
 
-.mobile-button {
-  width: 60px;
-  height: 60px;
-  font-size: 1.5rem;
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  cursor: pointer;
-  user-select: none;
-}
+      .mobile-button {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        user-select: none;
+      }
 
-.mobile-button.up {
-  grid-area: up;
-}
+      .mobile-button.up {
+        grid-area: up;
+      }
 
-.mobile-button.down {
-  grid-area: down;
-}
+      .mobile-button.down {
+        grid-area: down;
+      }
 
-.mobile-button.left {
-  grid-area: left;
-}
+      .mobile-button.left {
+        grid-area: left;
+      }
 
-.mobile-button.right {
-  grid-area: right;
-}
-@keyframes colorize {
-  0% {
-    filter: sepia(1) saturate(5) hue-rotate(0deg);
-  }
-  25% {
-    filter: sepia(1) saturate(5) hue-rotate(90deg);
-  }
-  50% {
-    filter: sepia(1) saturate(5) hue-rotate(180deg);
-  }
-  75% {
-    filter: sepia(1) saturate(5) hue-rotate(270deg);
-  }
-  100% {
-    filter: sepia(1) saturate(5) hue-rotate(360deg);
-  }
-}
+      .mobile-button.right {
+        grid-area: right;
+      }
 
-.img-small {
-  display: block;
-  margin: 0 auto;
-  width: 80px; /* tamaño base para móvil */
-  height: auto;
-  animation: colorize 8s linear infinite;
-}
+      #score-display {
+        color: white;
+        font-size: 24px;
+        font-weight: bold;
+        text-align: center;
+      }
+      #menu-button {
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        padding: 10px 20px;
+        background-color: #2196f3;
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        user-select: none;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: background-color 0.3s ease;
+        }
 
-/* Media query para escritorio */
-@media (min-width: 768px) {
-  body {
-    height: auto;        /* altura automática */
-    padding: 40px 0;     /* espacio arriba y abajo */
-    overflow: visible;   /* para que no corte contenido */
-  }
+        #menu-button:hover {
+        background-color: #1769aa;
+        }
 
-  #game-container {
-    width: 600px;        /* ancho fijo para escritorio */
-    aspect-ratio: auto;  /* ajusta automáticamente */
-  }
+      @keyframes colorize {
+        0% {
+          filter: sepia(1) saturate(5) hue-rotate(0deg);
+        }
 
-  .img-small {
-    width: 500px;        /* imagen más grande en escritorio */
-    margin-bottom: 20px; /* separación debajo de la imagen */
-    animation: color-change 5s linear infinite;
-    animation: colorize 8s linear infinite;
-  }
-}
+        25% {
+          filter: sepia(1) saturate(5) hue-rotate(90deg);
+        }
 
+        50% {
+          filter: sepia(1) saturate(5) hue-rotate(180deg);
+        }
+
+        75% {
+          filter: sepia(1) saturate(5) hue-rotate(270deg);
+        }
+
+        100% {
+          filter: sepia(1) saturate(5) hue-rotate(360deg);
+        }
+      }
+
+      .img-small {
+        display: block;
+        margin: 0 auto;
+        width: 300px;
+        height: auto;
+        animation: colorize 8s linear infinite;
+      }
+
+      @media (min-width: 768px) {
+         #score-display {
+          margin-top: 8px; /* más arriba en escritorio */
+          max-width: 600px;
+          width: 100%;
+          padding-bottom: 200px; /* espacio para que el score no quede pegado */
+        }
+        #game-container {
+          width: 600px;
+          aspect-ratio: auto;
+        }
+
+        .img-small {
+          width: 500px;
+          margin-bottom: 20px;
+          margin-top: 50px;
+        }
+      }
     </style>
-</head>
-<body>
-<body>
-  <img src="/assets/img/pacmaniagray.png" alt="Pacmania" class="img-small" />
-  <div id="game-container"></div>
+  </head>
 
+  <body>
+    <img src="/assets/img/pacmaniagray.png" alt="Pacmania" class="img-small" />
+    <div id="game-container"></div>
+    <button id="menu-button">☰</button>
+    <div id="score-display">Puntos: 0</div>
     <div id="mobile-controls">
-        <div class="dpad-grid">
-            <button class="mobile-button up" ontouchstart="startMove('up')" ontouchend="stopMove()" onmousedown="startMove('up')" onmouseup="stopMove()">↑</button>
-            <button class="mobile-button left" ontouchstart="startMove('left')" ontouchend="stopMove()" onmousedown="startMove('left')" onmouseup="stopMove()">←</button>
-            <button class="mobile-button down" ontouchstart="startMove('down')" ontouchend="stopMove()" onmousedown="startMove('down')" onmouseup="stopMove()">↓</button>
-            <button class="mobile-button right" ontouchstart="startMove('right')" ontouchend="stopMove()" onmousedown="startMove('right')" onmouseup="stopMove()">→</button>
-        </div>
+      <div class="dpad-grid">
+        <button
+          class="mobile-button up"
+          ontouchstart="startMove('up')"
+          ontouchend="stopMove()"
+          onmousedown="startMove('up')"
+          onmouseup="stopMove()"
+        >
+          ↑
+        </button>
+        <button
+          class="mobile-button left"
+          ontouchstart="startMove('left')"
+          ontouchend="stopMove()"
+          onmousedown="startMove('left')"
+          onmouseup="stopMove()"
+        >
+          ←
+        </button>
+        <button
+          class="mobile-button down"
+          ontouchstart="startMove('down')"
+          ontouchend="stopMove()"
+          onmousedown="startMove('down')"
+          onmouseup="stopMove()"
+        >
+          ↓
+        </button>
+        <button
+          class="mobile-button right"
+          ontouchstart="startMove('right')"
+          ontouchend="stopMove()"
+          onmousedown="startMove('right')"
+          onmouseup="stopMove()"
+        >
+          →
+        </button>
+      </div>
     </div>
-
     <script type="module">
-        import { saveGameSession } from '../js/api.js';
-        import { levels } from '../js/levels.js';
+      import { saveGameSession } from "../js/api.js";
+      import { levels } from "../js/levels.js";
+      document.getElementById('menu-button').addEventListener('click', () => {
+       window.location.href = '../home.html';
+    });
+      let game,
+        player,
+        cursors,
+        walls,
+        dots,
+        ghosts,
+        score = 0,
+        scoreText;
+      let moveInterval = null,
+        currentDirection = null;
+      function isTouchDevice() {
+        return "ontouchstart" in window || navigator.maxTouchPoints > 0;
+      }
+      // Detección iPad adecuada
+      let isMobile = isTouchDevice();
 
-        let game, player, cursors, walls, dots, ghosts, score = 0, scoreText;
-        let moveInterval = null, currentDirection = null;
-        let isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-        
-        let lastHitTime = 0; 
+      const config = {
+        type: Phaser.AUTO,
+        parent: "game-container",
+        width: 480,
+        height: 480,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+        physics: {
+          default: "arcade",
+          arcade: { debug: false },
+        },
+        scene: { preload, create, update },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById("mobile-controls").style.display =
+          isTouchDevice() ? "flex" : "none";
+        game = new Phaser.Game(config);
+      });
+
+      function preload() {
+        this.load.image("wall", "../assets/img/blue.png");
+        this.load.image("wall2", "../assets/img/green.png");
+        this.load.image("wall3", "../assets/img/red.png");
+        this.load.image("dot", "../assets/img/bullet.png");
+        this.load.image("pacman", "../assets/img/skull.png");
+        this.load.image("ghost", "../assets/img/ghost.png");
+      }
+
+      function create() {
+        walls = this.physics.add.staticGroup();
+        dots = this.physics.add.staticGroup();
+
+        const wallTypes = ["wall", "wall2", "wall3"];
+        const selectedWall = Phaser.Utils.Array.GetRandom(wallTypes);
+
         const level = levels[Math.floor(Math.random() * levels.length)];
+        for (let row = 0; row < level.length; row++) {
+          for (let col = 0; col < level[row].length; col++) {
+            const x = col * 32 + 16,
+              y = row * 32 + 16;
 
-        const config = {
-    type: Phaser.AUTO,
-    parent: 'game-container',
-    width: 480,
-    height: 480,
-    resolution: window.devicePixelRatio, // 🔍 Escalado nítido
-    pixelArt: true,                      // 🟨 Evita suavizado de sprites pixelados
-    scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-    physics: {
-        default: 'arcade',
-        arcade: { debug: false }
-    },
-    scene: {
-        preload,
-        create,
-        update
-    }
-};
-
-        window.onload = () => {
-            game = new Phaser.Game(config);
-            document.getElementById('mobile-controls').style.display = isMobile ? 'flex' : 'none';
-        };
-
-        function preload() {
-            this.load.image('wall', '../assets/img/blue.png');
-            this.load.image('dot', '../assets/img/bullet.png');
-            this.load.image('pacman', '../assets/img/obstacle.png');
-            this.load.image('ghost', '../assets/img/ghost.png');  // Fantasma
+            if (level[row][col] === 1) {
+              walls.create(x, y, selectedWall).setScale(0.12).refreshBody();
+            } else {
+              dots.create(x, y, "dot").setScale(0.1);
+            }
+          }
         }
 
-        function create() {
-            walls = this.physics.add.staticGroup();
-            dots = this.physics.add.staticGroup();
+        player = this.physics.add.sprite(48, 48, "pacman").setScale(0.5);
+        player.setCollideWorldBounds(true).setBounce(0).setDrag(300);
 
-            for (let row = 0; row < level.length; row++) {
-                for (let col = 0; col < level[row].length; col++) {
-                    let x = col * 32 + 16;
-                    let y = row * 32 + 16;
-                    if (level[row][col] === 1) {
-                        walls.create(x, y, 'wall').setScale(0.12).refreshBody();
-                    } else {
-                        dots.create(x, y, 'dot').setScale(0.1);
-                    }
-                }
-            }
+        // Hacer el collider un poco más pequeño (90% del tamaño original)
+        const colliderWidth = player.width * 0.9;
+        const colliderHeight = player.height * 0.9;
 
-            player = this.physics.add.sprite(48, 48, 'pacman').setScale(0.06);
-            player.setCollideWorldBounds(true);
-            player.setBounce(0).setDrag(300);
+        // Ajustar el offset para centrar el collider más pequeño
+        const offsetX = (player.width - colliderWidth) / 2;
+        const offsetY = (player.height - colliderHeight) / 2;
 
-            const size = player.width * 0.8;
-            player.body.setSize(size, size).setOffset(player.width * 0.1, player.height * 0.1);
+        player.body
+          .setSize(colliderWidth, colliderHeight)
+          .setOffset(offsetX, offsetY);
 
-            this.physics.add.collider(player, walls);
-            this.physics.add.overlap(player, dots, eatDot, null, this);
+        this.physics.add.collider(player, walls);
+        this.physics.add.overlap(player, dots, eatDot, null, this);
 
-            // Grupo de fantasmas
-            ghosts = this.physics.add.group();
-            addGhosts(this, 5); // ← Cambia este número para crear n fantasmas
+        ghosts = this.physics.add.group();
+        addGhosts(this, 5);
+        this.physics.add.collider(ghosts, walls);
+        this.physics.add.overlap(player, ghosts, hitGhost, null, this);
 
-            this.physics.add.collider(ghosts, walls);
-            // Usamos solo overlap para evitar empuje entre player y fantasmas
-            //this.physics.add.collider(player, ghosts, hitGhost, null, this);
-            this.physics.add.overlap(player, ghosts, hitGhost, null, this);
+        cursors = this.input.keyboard.createCursorKeys();
+        scoreText = document.getElementById("score-display");
+        scoreText.textContent = "Puntos: 0";
 
-            cursors = this.input.keyboard.createCursorKeys();
-            scoreText = this.add.text(10, 10, 'Puntos: 0', { fontSize: '20px', fill: '#fff' });
+        window.token = (localStorage.getItem("token") || "").trim();
+        if (!window.token) {
+          alert("No has iniciado sesión. Serás redirigido al login.");
+          window.location.href = "/login.html";
+        }
 
-            window.token = (localStorage.getItem('token') || '').trim();
-            if (!window.token) {
-                alert('No has iniciado sesión. Serás redirigido al login.');
-                window.location.href = '/login.html';
-            }
-
-            // Movimiento aleatorio de fantasmas cada segundo
-            this.time.addEvent({
-                delay: 1000,
-                loop: true,
-                callback: () => {
-                    ghosts.getChildren().forEach(ghost => {
-                        const dir = Phaser.Math.Between(0, 3);
-                        const speed = 60;
-                        switch (dir) {
-                            case 0: ghost.setVelocity(speed, 0); break;
-                            case 1: ghost.setVelocity(-speed, 0); break;
-                            case 2: ghost.setVelocity(0, speed); break;
-                            case 3: ghost.setVelocity(0, -speed); break;
-                        }
-                    });
-                }
+        this.time.addEvent({
+          delay: 1000,
+          loop: true,
+          callback: () => {
+            ghosts.getChildren().forEach((g) => {
+              const dir = Phaser.Math.Between(0, 3),
+                speed = 60;
+              if (dir === 0) g.setVelocity(speed, 0);
+              else if (dir === 1) g.setVelocity(-speed, 0);
+              else if (dir === 2) g.setVelocity(0, speed);
+              else g.setVelocity(0, -speed);
             });
+          },
+        });
+      }
+
+      function update() {
+        if (!moveInterval) {
+          if (cursors.left.isDown) move("left");
+          else if (cursors.right.isDown) move("right");
+          else if (cursors.up.isDown) move("up");
+          else if (cursors.down.isDown) move("down");
+          else player.setVelocity(0);
         }
+      }
 
-        function update() {
-            const speed = 120;
-            if (!moveInterval) {
-                if (cursors.left.isDown) move('left');
-                else if (cursors.right.isDown) move('right');
-                else if (cursors.up.isDown) move('up');
-                else if (cursors.down.isDown) move('down');
-                else player.setVelocity(0);
-            }
+      function eatDot(player, dot) {
+        if (
+          Phaser.Math.Distance.Between(player.x, player.y, dot.x, dot.y) < 10
+        ) {
+          dot.destroy();
+          score += 10;
+          scoreText.textContent = "Puntos: " + score;
+          if (dots.countActive() === 0) saveScore();
         }
+      }
 
-        function eatDot(player, dot) {
-            if (Phaser.Math.Distance.Between(player.x, player.y, dot.x, dot.y) < 10) {
-                dot.destroy();
-                score += 10;
-                scoreText.setText('Puntos: ' + score);
-                if (dots.countActive() === 0) saveScore();
-            }
+      let lastHitTime = 0;
+      function hitGhost(player, ghost) {
+        const now = Date.now();
+        if (now - lastHitTime > 1000) {
+          lastHitTime = now;
+          score = Math.max(0, score - 10);
+          scoreText.textContent = "Puntos: " + score;
+          ghost.setTint(0xffa500);
+          setTimeout(() => ghost.setTint(ghost.originalTint), 300);
+          if (score === 0) {
+            this.physics.pause();
+            player.setTint(0xff0000);
+            alert("¡Game Over! Has perdido.");
+            showRestartButton(this);
+          }
         }
+      }
 
-        function hitGhost(player, ghost) {
-            const currentTime = Date.now();
-
-            if (currentTime - lastHitTime > 1000) { // 1 segundo de "invencibilidad"
-                lastHitTime = currentTime;
-
-                score -= 10;
-                if (score < 0) score = 0;
-                scoreText.setText('Puntos: ' + score);
-
-                // Cambiar tint momentáneo
-                ghost.setTint(0xffa500);  // naranja
-                setTimeout(() => {
-                    ghost.setTint(ghost.originalTint);
-                }, 300);  // 300 ms de cambio de color
-
-                if (score === 0) {
-                    this.physics.pause();
-                    player.setTint(0xff0000);
-                    alert('¡Game Over! Has perdido.');
-                    showRestartButton(this);
-                }
-            }
+      async function saveScore() {
+        try {
+          await saveGameSession(window.token, "Pac-Man", score);
+          alert("Puntuación guardada correctamente: " + score);
+          showRestartButton(this);
+        } catch (e) {
+          alert("Error guardando puntuación: " + e.message);
+          if (e.message.toLowerCase().includes("unauthorized")) {
+            localStorage.clear();
+            window.location.href = "/login.html";
+          }
         }
+      }
 
-        async function saveScore() {
-            try {
-                await saveGameSession(window.token, 'Pac-Man', score);
-                alert('Puntuación guardada correctamente: ' + (score));
-                showRestartButton(this);
-            } catch (e) {
-                alert('Error guardando puntuación: ' + e.message);
-                if (e.message.toLowerCase().includes('unauthorized')) {
-                    localStorage.clear();
-                    window.location.href = '/login.html';
-                }
-            }
+      window.startMove = (direction) => {
+        currentDirection = direction;
+        if (!moveInterval) {
+          moveInterval = setInterval(() => move(currentDirection), 50);
         }
+      };
+      window.stopMove = () => {
+        clearInterval(moveInterval);
+        moveInterval = null;
+        player.setVelocity(0);
+      };
+      window.move = (direction) => {
+        const speed = 120;
+        if (direction === "left") player.setVelocity(-speed, 0);
+        else if (direction === "right") player.setVelocity(speed, 0);
+        else if (direction === "up") player.setVelocity(0, -speed);
+        else if (direction === "down") player.setVelocity(0, speed);
+      };
 
-        window.startMove = function(direction) {
-            currentDirection = direction;
-            if (!moveInterval) {
-                moveInterval = setInterval(() => move(currentDirection), 50);
-            }
-        };
-
-        window.stopMove = function() {
-            clearInterval(moveInterval);
-            moveInterval = null;
-            player.setVelocity(0);
-        };
-
-        window.move = function(direction) {
-            const speed = 120;
-            switch (direction) {
-                case 'left':
-                    player.setVelocity(-speed, 0);
-                    break;
-                case 'right':
-                    player.setVelocity(speed, 0);
-                    break;
-                case 'up':
-                    player.setVelocity(0, -speed);
-                    break;
-                case 'down':
-                    player.setVelocity(0, speed);
-                    break;
-            }
-        };
-
-        function addGhosts(scene, count) {
-            const tints = [0xff0000, 0x0000ff, 0x00ff00, 0xffff00, 0xff00ff, 0x00ffff];
-            ghosts = scene.physics.add.group();
-
-            const startX = 32 * 7 + 16; // Columna 7, centrado
-            const startY = 32 * 5 + 16; // Fila 5, centrado
-
-            for (let i = 0; i < count; i++) {
-                const ghost = ghosts.create(startX, startY, 'ghost').setScale(0.06);
-                const tintColor = tints[i % tints.length];
-                ghost.setTint(tintColor);
-                ghost.originalTint = tintColor; // Guardamos tint original
-            }
-
-            scene.physics.add.collider(ghosts, walls);
-
-            // Solo overlap para evitar empuje con player
-            scene.physics.add.overlap(player, ghosts, hitGhost, null, scene);
-
-            scene.time.addEvent({
-                delay: 1000,
-                loop: true,
-                callback: () => {
-                    ghosts.getChildren().forEach(ghost => {
-                        const dir = Phaser.Math.Between(0, 3);
-                        const speed = 60;
-                        switch (dir) {
-                            case 0: ghost.setVelocity(speed, 0); break;
-                            case 1: ghost.setVelocity(-speed, 0); break;
-                            case 2: ghost.setVelocity(0, speed); break;
-                            case 3: ghost.setVelocity(0, -speed); break;
-                        }
-                    });
-                }
-            });
+      function addGhosts(scene, count) {
+        const tints = [
+          0xff0000, 0x0000ff, 0x00ff00, 0xffff00, 0xff00ff, 0x00ffff,
+        ];
+        ghosts = scene.physics.add.group();
+        const startX = 32 * 7 + 16,
+          startY = 32 * 5 + 16;
+        for (let i = 0; i < count; i++) {
+          const ghost = ghosts.create(startX, startY, "ghost").setScale(0.51);
+          const color = tints[i % tints.length];
+          ghost.setTint(color);
+          ghost.originalTint = color;
         }
+        scene.physics.add.collider(ghosts, walls);
+        scene.physics.add.overlap(player, ghosts, hitGhost, null, scene);
+      }
 
-        function showRestartButton(scene) {
-            // Evita crear más de un botón
-            if (scene.restartButton) return;
-
-            const width = scene.scale.width;
-            const height = scene.scale.height;
-
-            scene.restartButton = scene.add.text(width / 2, height / 2, 'Reiniciar Juego', {
-                fontSize: '32px',
-                fill: '#fff',
-                backgroundColor: '#000',
-                padding: { x: 20, y: 10 },
-                borderRadius: 10,
-                align: 'center'
-            })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                scene.restartButton.destroy();
-                scene.restartButton = null;
-                scene.scene.restart(); // reinicia la escena
-            });
-        }
-
+      function showRestartButton(scene) {
+        if (scene.restartButton) return;
+        const x = scene.scale.width / 2,
+          y = scene.scale.height / 2;
+        scene.restartButton = scene.add
+          .text(x, y, "Reiniciar Juego", {
+            fontSize: "32px",
+            fill: "#fff",
+            backgroundColor: "#000",
+            padding: { x: 20, y: 10 },
+            borderRadius: 10,
+            align: "center",
+          })
+          .setOrigin(0.5)
+          .setInteractive({ useHandCursor: true })
+          .on("pointerdown", () => {
+            scene.restartButton.destroy();
+            scene.restartButton = null;
+            scene.scene.restart();
+          });
+      }
     </script>
-</body>
+  </body>
 </html>

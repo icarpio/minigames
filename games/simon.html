@@ -3,56 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Simon Game con Phaser</title>
+  <title>Simon Game</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
   <style>
-    body {
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
       margin: 0;
+      padding: 0;
+      height: 100%;
       background-color: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      height: 100vh;
       color: #eee;
       font-family: Arial, sans-serif;
     }
-#game-container {
-  border: 4px solid #4caf50;
-  border-radius: 15px;
-  box-shadow: 0 0 20px #4caf50;
-  max-width: 600px; /* o el valor que funcione para tu diseño */
-  width: 100%;
-  height: auto;
-  margin: 40px auto; /* centra horizontalmente y agrega separación */
-  padding: 20px;
-}
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden; /* evitar scroll */
+    }
+
+    #game-container {
+      border: 4px solid #4caf50;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #4caf50;
+      width: 100%;
+      max-width: 700px; /* límite para escritorio */
+      margin: 40px auto;
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      background-color: #111;
+    }
+
+    canvas {
+      display: block;
+      width: 100% !important;
+      height: auto !important;
+      max-height: 80vh;
+      max-width: 100%;
+    }
 
     #scoreDisplay {
       text-align: center;
       margin-top: 1rem;
       font-size: 1.5rem;
       color: #4caf50;
+      max-width: 700px;
+      width: 90vw;
+      margin-left: auto;
+      margin-right: auto;
     }
-
-    @media (min-width: 768px) {
-  #game-container {
-    max-width: 800px;
-    height: auto;
-    margin: 60px auto;
+      #homeButtonContainer {
+    text-align: center;
+    margin-top: 1rem;
   }
-}
+
+  #homeButton {
+    background-color: #4caf50;
+    border: none;
+    color: white;
+    padding: 10px 25px;
+    text-align: center;
+    font-size: 1.2rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    box-shadow: 0 0 10px #4caf50;
+  }
+
+  #homeButton:hover {
+    background-color: #43a047;
+    box-shadow: 0 0 15px #43a047;
+  }
+
+
+    @media (max-width: 767px) {
+      #game-container {
+        max-width: 90vw;
+        margin: 20px auto;
+      }
+      #scoreDisplay {
+        font-size: 1.3rem;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <div>
-    <div id="game-container"></div>
-    <div id="scoreDisplay">Puntuación: 0</div>
+  <div id="game-container"></div>
+  <div id="scoreDisplay">Puntuación: 0</div>
+    <div id="homeButtonContainer">
+    <button id="homeButton">Menu</button>
   </div>
+
 
   <script type="module">
     import { saveGameSession } from '../js/api.js';
+     document.getElementById('homeButton').addEventListener('click', () => {
+      window.location.href = '../home.html'; 
+    });
+
 
     const token = (localStorage.getItem('token') || '').trim();
     if (!token) {
@@ -79,26 +137,25 @@
       }
 
       create() {
-        const centerX = this.cameras.main.centerX;
-        const centerY = this.cameras.main.centerY;
-        const size = this.scale.width / 4;
+         const centerX = this.cameras.main.centerX;
+  const centerY = this.cameras.main.centerY;
+  const size = this.scale.width / 4; // tamaño botón según canvas
 
-        const colors = ['green', 'red', 'yellow', 'blue'];
-        const positions = [
-          { x: centerX - size, y: centerY - size },
-          { x: centerX + size, y: centerY - size },
-          { x: centerX - size, y: centerY + size },
-          { x: centerX + size, y: centerY + size },
-        ];
+  const colors = ['green', 'red', 'yellow', 'blue'];
+  const positions = [
+    { x: centerX - size, y: centerY - size },
+    { x: centerX + size, y: centerY - size },
+    { x: centerX - size, y: centerY + size },
+    { x: centerX + size, y: centerY + size },
+  ];
 
-        for (let i = 0; i < 4; i++) {
-        const btn = this.add.image(positions[i].x, positions[i].y, colors[i]).setInteractive();
-        btn.setDisplaySize(size, size);
-        btn.setScale(0.5);  // Aquí la escala inicial
-        btn.colorName = colors[i];
-        btn.on('pointerdown', () => this.handlePlayerInput(btn));
-        this.buttons.push(btn);
-      }
+  for (let i = 0; i < 4; i++) {
+    const btn = this.add.image(positions[i].x, positions[i].y, colors[i]).setInteractive();
+    btn.setDisplaySize(size, size);  // tamaño exacto del botón
+    btn.colorName = colors[i];
+    btn.on('pointerdown', () => this.handlePlayerInput(btn));
+    this.buttons.push(btn);
+  }
 
         this.scoreText = document.getElementById('scoreDisplay');
         this.startGame();
@@ -130,32 +187,21 @@
       }
 
       highlightButton(button) {
-  return new Promise((resolve) => {
-    this.tweens.add({
-      targets: button,
-      scale: 0.2,      // agranda solo un 10%
-      tint: 0xffffaa,
-      duration: 200,   // un poco más rápido
-      ease: 'Linear',
-      onComplete: () => {
-        this.tweens.add({
-          targets: button,
-          scale:0.5,      // vuelve a tamaño original
-          tint: 0xffffff,
-          duration: 200,
-          ease: 'Linear',
-          onComplete: () => {
-            button.clearTint();
-            resolve();
-          }
+        return new Promise((resolve) => {
+          this.tweens.add({
+            targets: button,
+            scale: 0.2,
+            tint: 0xffffaa,
+            duration: 200,
+            ease: 'Linear',
+            yoyo: true,
+            onComplete: () => {
+              button.clearTint();
+              resolve();
+            }
+          });
         });
       }
-    });
-  });
-}
-
-
-
 
       handlePlayerInput(button) {
         if (!this.isPlayerTurn) return;
@@ -179,10 +225,9 @@
 
       async gameOver() {
         alert(`Juego terminado! Tu puntuación fue: ${this.score}`);
-
         try {
           await saveGameSession(token, 'Simon Game', this.score);
-          console.log(`Puntos guardados: ${this.score}`)
+          console.log(`Puntos guardados: ${this.score}`);
         } catch (e) {
           alert('Error guardando puntuación: ' + e.message);
           if (e.message.toLowerCase().includes('unauthorized')) {
@@ -198,10 +243,17 @@
       }
     }
 
-    // Tamaño dinámico responsivo
     function getResponsiveSize() {
-      const min = Math.min(window.innerWidth, window.innerHeight * 0.8);
-      return Math.floor(min);
+      const container = document.getElementById('game-container');
+      const style = getComputedStyle(container);
+      const containerWidth = container.clientWidth 
+        - parseFloat(style.paddingLeft) 
+        - parseFloat(style.paddingRight);
+
+      const containerHeight = window.innerHeight * 0.8; // 80% de la altura ventana
+
+      // Usamos el menor para que el canvas sea cuadrado y quepa bien
+      return Math.floor(Math.min(containerWidth, containerHeight));
     }
 
     let game;
@@ -212,10 +264,14 @@
       const config = {
         type: Phaser.AUTO,
         parent: 'game-container',
-        width: size,
-        height: size,
         backgroundColor: '#111',
         scene: SimonGame,
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+          width: size,
+          height: size
+        }
       };
 
       if (game) {
@@ -225,10 +281,7 @@
       game = new Phaser.Game(config);
     }
 
-    window.addEventListener('resize', () => {
-      launchGame();
-    });
-
+    window.addEventListener('resize', launchGame);
     launchGame();
   </script>
 </body>

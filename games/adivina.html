@@ -9,7 +9,6 @@
       font-family: 'Segoe UI', sans-serif;
       background-color: #eef2f5;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       min-height: 100vh;
@@ -25,9 +24,12 @@
       max-width: 400px;
       width: 90%;
       text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    h1 {
+    h2 {
       font-size: 2rem;
       margin-bottom: 15px;
     }
@@ -36,7 +38,8 @@
       padding: 10px;
       font-size: 1rem;
       width: 100px;
-      margin: 10px auto;
+      margin: 10px 0;
+      text-align: center;
     }
 
     .guess-btn {
@@ -60,9 +63,16 @@
       min-height: 24px;
     }
 
-    #restartBtn {
-      display: none;
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
       margin-top: 20px;
+    }
+
+    #restartBtn,
+    #btnHome {
       padding: 8px 18px;
       background-color: #4caf50;
       color: white;
@@ -72,7 +82,12 @@
       cursor: pointer;
     }
 
-    #restartBtn:hover {
+    #restartBtn {
+      display: none;
+    }
+
+    #restartBtn:hover,
+    #btnHome:hover {
       background-color: #388e3c;
     }
   </style>
@@ -80,13 +95,17 @@
 <body>
 
   <div class="game-container">
-    <h1>🎯 Adivina el Número (1–50)</h1>
+    <h3>🎯 Adivina el Número (1–50)</h3>
     <p class="status" id="instructions">Tienes 5 intentos</p>
     <input type="number" id="guessInput" placeholder="1-50" min="1" max="50" />
-    <br>
     <button class="guess-btn" id="guessBtn">Adivinar</button>
     <p class="status" id="feedback"></p>
-    <button id="restartBtn">Reiniciar</button>
+    
+    <!-- Agrupamos los botones -->
+    <div class="button-group">
+      <button id="restartBtn">Reiniciar</button>
+      <button id="btnHome" onclick="window.location.href='../home.html'">Menu</button>
+    </div>
   </div>
 
   <script type="module" src="../js/adivina.js"></script>

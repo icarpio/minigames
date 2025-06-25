@@ -2,123 +2,149 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Flappy Bird Phaser 3 con guardado</title>
+  <title>Flappy Bird</title>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
   <style>
- html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
-  background: #70c5ce;
-  overflow: hidden;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #70c5ce;
+      overflow: hidden;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-#game-container {
-  position: relative;
-  margin: auto;
-   /* max-width: 480px; */
-  /* max-height: 640px; */
-  overflow: hidden;
-  background: black;
-  touch-action: none;
-}
-#restart-button {
-  position: fixed;
-  bottom: 80px; /* Un poco arriba del botón saltar */
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.8);
-  border: none;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 9999;
-  user-select: none;
-  touch-action: manipulation;
-}
-/* Desktop: tamaño fijo */
-@media (min-aspect-ratio: 3/4) {
-  #game-container {
-    width: 480px;
-    height: 640px;
-  }
-}
+    #game-container {
+      position: relative;
+      margin: auto;
+      overflow: hidden;
+      background: black;
+      touch-action: none;
+    }
 
-/* Móviles verticales: altura 100vh, ancho proporcional */
-@media (max-aspect-ratio: 3/4) {
-  #game-container {
-    height: 100vh;
-    width: calc(100vh * (480 / 640));
-  }
-}
+    #restart-button {
+      position: fixed;
+      bottom: 20px; /* MISMA POSICIÓN QUE SALTAR */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 50px;
+      background: rgba(255, 255, 255, 0.8);
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      user-select: none;
+      touch-action: manipulation;
+      display: none; /* Oculto al inicio */
+    }
 
-/* En móviles muy estrechos, que el ancho no sea menor que 100% */
-@media (max-width: 320px) {
-  #game-container {
-    width: 100vw;
-    height: calc(100vw * (640 / 480));
-  }
-}
+    #jump-button {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 50px;
+      background: rgba(255,255,255,0.8);
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      touch-action: manipulation;
+      user-select: none;
+    }
 
-#game-container canvas {
-  width: 100% !important;
-  height: 100% !important;
-  display: block;
-  image-rendering: pixelated;
-}
+    #menu-button {
+      position: fixed;
+      bottom: 80px; /* Justo encima de REINICIAR */
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 50px;
+      background: rgba(255,255,255,0.8);
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 9999;
+      user-select: none;
+      touch-action: manipulation;
+      display: none; /* Oculto al inicio */
+    }
 
-#jump-button {
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 120px;
-  height: 50px;
-  background: rgba(255,255,255,0.8);
-  border: none;
-  border-radius: 10px;
-  font-size: 18px;
-  font-weight: bold;
-  cursor: pointer;
-  z-index: 9999;
-  touch-action: manipulation;
-  user-select: none;
-}
+    /* Responsive */
+    @media (max-width: 320px) {
+      #jump-button, #restart-button, #menu-button {
+        width: 100px;
+        height: 45px;
+        font-size: 16px;
+      }
+    }
 
-@media (max-width: 320px) {
-  #jump-button {
-    width: 100px;
-    height: 45px;
-    font-size: 16px;
-  }
-}
-@media (max-aspect-ratio: 3/4) {
-  #game-container {
-    width: 100vw;
-    height: 100vh;
-    max-width: none;
-    max-height: none;
-  }
-}
+    @media (min-aspect-ratio: 3/4) {
+      #game-container {
+        width: 480px;
+        height: 640px;
+      }
+    }
 
+    @media (max-aspect-ratio: 3/4) {
+      #game-container {
+        height: 100vh;
+        width: calc(100vh * (480 / 640));
+      }
+    }
+
+    @media (max-width: 320px) {
+      #game-container {
+        width: 100vw;
+        height: calc(100vw * (640 / 480));
+      }
+    }
+
+    @media (max-aspect-ratio: 3/4) {
+      #game-container {
+        width: 100vw;
+        height: 100vh;
+        max-width: none;
+        max-height: none;
+      }
+    }
+
+    #game-container canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+      image-rendering: pixelated;
+    }
   </style>
 </head>
 <body>
   <div id="game-container"></div>
-  <button id="jump-button">SALTAR</button>
-  <button id="restart-button" style="display:none;">REINICIAR</button>
+  <button id="jump-button">⏫</button>
+  <button id="restart-button">🔄</button>
+  <button id="menu-button">☰</button>
 
   <script type="module">
     import { saveGameSession } from '../js/api.js';
+
     const restartButton = document.getElementById('restart-button');
+    const jumpButton = document.getElementById('jump-button');
+    const menuButton = document.getElementById('menu-button');
+
+    menuButton.addEventListener('click', () => {
+      window.location.href = '../home.html'; 
+    });
 
     restartButton.addEventListener('click', () => {
-      // Reiniciar juego: recarga la página (opción sencilla)
+      // Recarga la página para reiniciar el juego
       window.location.reload();
     });
 
@@ -135,7 +161,7 @@
         }
       },
       scale: {
-        mode: Phaser.Scale.FIT,        // Mantener FIT para conservar proporción sin usar RESIZE
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 480,
         height: 640,
@@ -155,7 +181,6 @@
     let scoreText;
     let gameOver = false;
     let token = (localStorage.getItem('token') || '').trim();
-    let pipeCollider;
 
     if (!token) {
       alert('No has iniciado sesión. Serás redirigido al login.');
@@ -183,7 +208,6 @@
       this.input.on('pointerdown', flap, this);
       this.input.keyboard.on('keydown-SPACE', flap, this);
 
-      const jumpButton = document.getElementById('jump-button');
       jumpButton.addEventListener('click', () => {
         flap.call(this);
       });
@@ -196,7 +220,6 @@
       });
 
       this.physics.add.collider(bird, pipes, hitPipe, null, this);
-      
     }
 
     function update() {
@@ -259,10 +282,13 @@
       if (gameOver) return;
       gameOver = true;
 
-      // Detener tuberías
       pipes.children.iterate(pipe => {
         pipe.setVelocityX(0);
       });
+
+      // Ocultar botón SALTAR
+      jumpButton.style.display = 'none';
+
       saveScore();
     }
 
@@ -270,8 +296,12 @@
       try {
         await saveGameSession(token, 'Flappy Bird', score * 10);
         alert('Puntuación guardada: ' + (score * 10));
-        game.scene.scenes[0].physics.pause(); // Detener físicas tras guardar
-        restartButton.style.display = 'block';  // Mostrar botón reiniciar
+
+        game.scene.scenes[0].physics.pause();
+
+        // Mostrar botones REINICIAR y MENÚ
+        restartButton.style.display = 'block';
+        menuButton.style.display = 'block';
       } catch (e) {
         alert('Error guardando puntuación: ' + e.message);
         if (e.message.toLowerCase().includes('unauthorized')) {

@@ -5,6 +5,13 @@ const token = (localStorage.getItem('token') || '').trim();
       window.location.href = '../index.html';
     }
 
+window.addEventListener('DOMContentLoaded', () => {
+  const menuBtn = document.getElementById('menuButton');
+  menuBtn.addEventListener('click', () => {
+    window.location.href = '../home.html'; 
+  });
+});
+
 class FruitNinja extends Phaser.Scene {
   constructor() {
     super({ key: 'FruitNinja' });
@@ -152,17 +159,58 @@ update(time, delta) {
   }
 
   // Reiniciar estado sólo si no hubo redirección
-  this.resetGame();
+  this.createRestartButton(); // Mostrar botón reiniciar
 }
+
+createRestartButton() {
+  if (!document.getElementById('restartButton')) {
+    const btn = document.createElement('button');
+    btn.id = 'restartButton';
+    btn.textContent = 'Reiniciar Juego';
+
+    // Estilos para centrar el botón en pantalla
+    btn.style.position = 'fixed';      // fijo respecto a la ventana
+    btn.style.top = '50%';             // a mitad vertical
+    btn.style.left = '50%';            // a mitad horizontal
+    btn.style.transform = 'translate(-50%, -50%)'; // para centrar perfectamente
+    btn.style.padding = '15px 30px';
+    btn.style.fontSize = '20px';
+    btn.style.zIndex = 1000;
+    btn.style.cursor = 'pointer';
+    btn.style.borderRadius = '8px';
+    btn.style.border = 'none';
+    btn.style.backgroundColor = '#0a2e51';
+    btn.style.color = '#fff';
+    btn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+
+    btn.addEventListener('click', () => {
+      btn.style.display = 'none';
+      this.resetGame();
+    });
+
+    document.body.appendChild(btn);
+  } else {
+    const btn = document.getElementById('restartButton');
+    btn.style.display = 'block';
+  }
+}
+
+
 
 
 
 resetGame() {
   this.gameOver = false;
-  this.scene.restart();
   this.score = 0;
   this.clicks = 0;
   this.scoreText.textContent = `Puntuación: 0`;
+  this.scene.restart();
+
+  // Ocultar botón reiniciar si existe
+  const btn = document.getElementById('restartButton');
+  if (btn) {
+    btn.style.display = 'none';
+  }
 }
 }
 
