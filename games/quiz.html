@@ -174,11 +174,18 @@ h1 {
 }
 
 #summary li {
-  padding: 10px;
-  border-bottom: 1px solid #c8e6c9;
-  display: flex;
-  justify-content: space-between;
-  font-size: 1.2rem;
+  padding: 12px 15px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  /* Opcional: para que no se vea tan apretado */
+  box-sizing: border-box;
+
+  /* Para centrar texto */
+  text-align: center;
+
+  /* Flex no si solo quieres centrar texto */
+  display: block;
 }
 
 #summary li.correct {

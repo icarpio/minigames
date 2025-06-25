@@ -221,7 +221,7 @@ function showSummary() {
       <strong>Q${idx + 1}:</strong> ${item.question} <br/>
       Tu respuesta: ${item.userAnswer || 'Sin respuesta'} <br/>
       Correcta: ${item.correctAnswer} <br/>
-      Estado: ${item.correct ? 'Correcto' : 'Incorrecto'}
+      <!--Estado: ${item.correct ? 'Correcto' : 'Incorrecto'}-->
     </li>`;
   });
   html += '</ul>';
