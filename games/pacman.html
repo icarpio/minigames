@@ -6,180 +6,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
-      :root {
-        --vh: 1vh;
-      }
+         :root {
+      --vh: 1vh;
+    }
 
-      body {
-        margin: 0;
-        background-color: black;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: calc(var(--vh, 1vh) * 100);
-        overflow: hidden;
-        font-family: sans-serif;
-        gap: 20px;
-      }
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: black;
+      font-family: sans-serif;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      height: 100vh;
+      overflow: hidden;
+    }
 
-      #game-container {
-        width: 100vmin;
-        max-width: 100vw;
-        aspect-ratio: 1 / 1;
-        position: relative;
-      }
+    #menu-button {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      padding: 10px 20px;
+      background-color: #2196f3;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      transition: background-color 0.3s ease;
+    }
 
-      #game-container canvas {
-        display: block;
-        width: 100%;
-        height: 100%;
-      }
+    #menu-button:hover {
+      background-color: #1769aa;
+    }
 
-      /* Botones siempre visibles */
-      #mobile-controls {
-        position: fixed;
-        bottom: 10px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999;
-        display: flex;
-        justify-content: center;
-      }
+    #score-display {
+      font-size: clamp(18px, 4vw, 24px);
+      font-weight: bold;
+      text-align: center;
+      margin: 20px 0;
+    }
 
-      .dpad-grid {
-        display: grid;
-        grid-template-areas:
-          ". up ."
-          "left down right";
-        grid-gap: 10px;
-        justify-items: center;
-        align-items: center;
-      }
+    .img-small {
+      width: clamp(150px, 50vw, 300px);
+      height: auto;
+      margin: 20px 0;
+      animation: colorize 8s linear infinite;
+    }
 
-      .mobile-button {
-        width: 60px;
-        height: 60px;
-        font-size: 1.5rem;
-        background-color: #4caf50;
-        color: white;
-        border: none;
-        border-radius: 10px;
-        cursor: pointer;
-        user-select: none;
-      }
+    #game-container {
+      width: min(90vmin, 100%);
+      aspect-ratio: 1 / 1;
+      position: relative;
+      max-width: 600px;
+    }
 
-      .mobile-button.up {
-        grid-area: up;
-      }
+    #game-container canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
 
-      .mobile-button.down {
-        grid-area: down;
-      }
+    #mobile-controls {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      display: flex;
+      justify-content: center;
+    }
 
-      .mobile-button.left {
-        grid-area: left;
-      }
+    .dpad-grid {
+      display: grid;
+      grid-template-areas:
+        ". up ."
+        "left down right";
+      grid-gap: 10px;
+      justify-items: center;
+      align-items: center;
+    }
 
-      .mobile-button.right {
-        grid-area: right;
-      }
+    .mobile-button {
+      width: clamp(50px, 12vw, 60px);
+      height: clamp(50px, 12vw, 60px);
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
 
-      #score-display {
-        color: white;
-        font-size: 24px;
-        font-weight: bold;
-        text-align: center;
-        padding-bottom: 310px;
-      }
-      #menu-button {
-        position: fixed;
-        top: 10px;
-        left: 10px;
-        z-index: 1000;
-        padding: 10px 20px;
-        background-color: #2196f3;
-        border: none;
-        border-radius: 8px;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        user-select: none;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        transition: background-color 0.3s ease;
-        }
+    .mobile-button.up { grid-area: up; }
+    .mobile-button.down { grid-area: down; }
+    .mobile-button.left { grid-area: left; }
+    .mobile-button.right { grid-area: right; }
 
-        #menu-button:hover {
-        background-color: #1769aa;
-        }
+    @keyframes colorize {
+      0%   { filter: sepia(1) saturate(5) hue-rotate(0deg); }
+      25%  { filter: sepia(1) saturate(5) hue-rotate(90deg); }
+      50%  { filter: sepia(1) saturate(5) hue-rotate(180deg); }
+      75%  { filter: sepia(1) saturate(5) hue-rotate(270deg); }
+      100% { filter: sepia(1) saturate(5) hue-rotate(360deg); }
+    }
 
-      @keyframes colorize {
-        0% {
-          filter: sepia(1) saturate(5) hue-rotate(0deg);
-        }
-
-        25% {
-          filter: sepia(1) saturate(5) hue-rotate(90deg);
-        }
-
-        50% {
-          filter: sepia(1) saturate(5) hue-rotate(180deg);
-        }
-
-        75% {
-          filter: sepia(1) saturate(5) hue-rotate(270deg);
-        }
-
-        100% {
-          filter: sepia(1) saturate(5) hue-rotate(360deg);
-        }
-      }
-
+    @media (max-height: 500px) {
       .img-small {
-        display: block;
-        margin: 0 auto;
-        width: 300px;
-        height: auto;
-        animation: colorize 8s linear infinite;
-        padding-top: 300px;
+        display: none;
       }
-
-      @media (min-width: 768px) {
-         #score-display {
-          margin-top: 8px; /* más arriba en escritorio */
-          max-width: 600px;
-          width: 100%;
-          padding-bottom: 200px; /* espacio para que el score no quede pegado */
-        }
-        #game-container {
-          width: 600px;
-          aspect-ratio: auto;
-        }
-
-        .img-small {
-          width: 500px;
-          margin-bottom: 20px;
-          margin-top: 50px;
-        }
-      }
-
-      @media (max-width: 360px), (max-height: 640px) {
-  #score-display {
-    padding-bottom: 220px; /* espacio más razonable */
-    font-size: 20px;
-  }
-
-  .img-small {
-    width: 200px;
-    padding-top: 150px;
-  }
-
-  .mobile-button {
-    width: 50px;
-    height: 50px;
-    font-size: 1.2rem;
-  }
-}
+    }
     </style>
   </head>
 
