@@ -122,7 +122,10 @@ function showQuestion() {
   const progressPercent = (currentQuestion / totalQuestions) * 100;
   progressBar.style.width = progressPercent + '%';
 
-  q.options.forEach(opt => {
+  // Mezclamos las opciones antes de mostrarlas
+  const shuffledOptions = shuffleArray(q.options);
+
+  shuffledOptions.forEach(opt => {
     const btn = document.createElement('button');
     btn.textContent = opt;
     btn.classList.add('option-btn');
@@ -142,6 +145,7 @@ function showQuestion() {
     }
   }, 1000);
 }
+
 
 function updateTimerDisplay() {
   timerDisplay.textContent = `Tiempo: ${timeLeft}s`;
