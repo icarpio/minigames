@@ -302,16 +302,17 @@
         }
       }
 
-      function eatDot(player, dot) {
-        if (
-          Phaser.Math.Distance.Between(player.x, player.y, dot.x, dot.y) < 10
-        ) {
-          dot.destroy();
-          score += 10;
-          scoreText.textContent = "Puntos: " + score;
-          if (dots.countActive() === 0) saveScore();
+      async function eatDot(player, dot) {
+        if (Phaser.Math.Distance.Between(player.x, player.y, dot.x, dot.y) < 10) {
+            dot.destroy();
+            score += 10;
+            scoreText.textContent = "Puntos: " + score;
+            if (dots.countActive() === 0) {
+            await saveScore(this); // pasa la escena actual
+            }
         }
-      }
+        }
+
 
       let lastHitTime = 0;
       function hitGhost(player, ghost) {
@@ -331,19 +332,20 @@
         }
       }
 
-      async function saveScore() {
+      
+        async function saveScore(scene) {
         try {
-          await saveGameSession(window.token, "Pac-Man", score);
-          alert("Puntuación guardada correctamente: " + score);
-          showRestartButton(this);
+            await saveGameSession(window.token, "PacMania", score);
+            alert("Puntuación guardada correctamente: " + score);
+            showRestartButton(scene); // usa la escena correcta
         } catch (e) {
-          alert("Error guardando puntuación: " + e.message);
-          if (e.message.toLowerCase().includes("unauthorized")) {
+            alert("Error guardando puntuación: " + e.message);
+            if (e.message.toLowerCase().includes("unauthorized")) {
             localStorage.clear();
             window.location.href = "/login.html";
-          }
+            }
         }
-      }
+        }
 
       window.startMove = (direction) => {
         currentDirection = direction;
