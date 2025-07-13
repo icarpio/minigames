@@ -73,32 +73,40 @@ document.getElementById("registerForm").addEventListener("submit", async functio
   //'https://albertaapi.onrender.com/api/minigames/auth/register/'
   //'http://localhost:8000/api/minigames/auth/register/'
   try {
-    const res = await fetch('https://albertaapi.onrender.com/api/minigames/auth/register/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  const res = await fetch('https://albertaapi.onrender.com/api/minigames/auth/register/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
 
-    // Si no es OK, leemos *una sola vez* el JSON de error y lo mostramos
-    if (!res.ok) {
+  const contentType = res.headers.get("content-type");
+
+  if (!res.ok) {
+    if (contentType && contentType.includes("application/json")) {
       const errorJson = await res.json();
       console.error('Error de registro completo:', errorJson);
-      document.getElementById("registerResult").textContent = 
+      document.getElementById("registerResult").textContent =
         Object.entries(errorJson)
-              .map(([f, msgs]) => `${f}: ${msgs.join(', ')}`)
+              .map(([f, msgs]) => `${f}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`)
               .join(' | ');
-      return;
+    } else {
+      // Respuesta inesperada (HTML, texto plano, etc.)
+      const errorText = await res.text();
+      console.error('Respuesta inesperada:', errorText);
+      document.getElementById("registerResult").textContent = "Error inesperado del servidor.";
     }
-
-    // Si OK, todo bien
-    const data = await res.json();
-    console.log('Registro exitoso:', data);
-    window.location.href = "/index.html"; 
-
-  } catch (networkErr) {
-    console.error('Fetch falló:', networkErr);
-    document.getElementById("registerResult").textContent = 'Error de red al registrarse.';
+    return;
   }
+
+  // Si todo fue bien
+  const data = await res.json();
+  console.log('Registro exitoso:', data);
+  window.location.href = "/index.html";
+
+} catch (networkErr) {
+  console.error('Fetch falló:', networkErr);
+  document.getElementById("registerResult").textContent = 'Error de red al registrarse.';
+}
 });
 </script>
 
