@@ -1,5 +1,5 @@
 async function fetchShopItems() {
-  const response = await fetch('https://albertaapi.onrender.com/api/shop/', {
+  const response = await fetch('https://albertaapi.onrender.com/minigames/shop/', {
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('token')
     }
