@@ -17,50 +17,33 @@
       height: 600px;
     }
     #puzzle canvas {
-      background-color: #e0e0e0 !important;
-    }
-    #score {
-      margin-top: 20px;
-      font-size: 24px;
-      font-weight: bold;
-    }
+  background-color: #e0e0e0 !important;
+}
   </style>
 </head>
 <body>
   <h1>Rompecabezas</h1>
   <div id="puzzle"></div>
-  <div id="score">Puntuación: 0</div>
 
   <!-- Librería headbreaker -->
   <script src="https://flbulgarelli.github.io/headbreaker/js/headbreaker.js"></script>
-
-  <!-- Script para el puzzle y puntuación -->
-  <script>
-    // Función para simular import de saveGameSession (ajusta según tu proyecto real)
-    async function saveGameSession(token, gameName, points) {
-      // Aquí iría la llamada real a tu API para guardar la puntuación
-      // Simulación:
-      return new Promise((resolve) => {
-        console.log(`Guardando juego: ${gameName} con puntos: ${points} y token: ${token}`);
-        setTimeout(resolve, 1000);
-      });
-    }
+  <script type="module">
+     import { saveGameSession } from '../js/api.js';
 
     const token = (localStorage.getItem('token') || '').trim();
     if (!token) {
       alert('No has iniciado sesión. Serás redirigido al login.');
       window.location.href = '../index.html';
     }
-
     const images = [
-      '../assets/img/img1.png',
-      '../assets/img/img2.png',
-      '../assets/img/img3.png',
-      '../assets/img/img4.png',
-      '../assets/img/img5.png',
-      '../assets/img/img6.png',
-      '../assets/img/img7.png',
-      '../assets/img/img8.png',
+      '../assets/img/01.jpg',
+      '../assets/img/02.jpg',
+      '../assets/img/03.jpg',
+      '../assets/img/04.jpg',
+      '../assets/img/05.jpg',
+      '../assets/img/06.jpg',
+      '../assets/img/07.jpg',
+      '../assets/img/08.jpg',
     ];
 
     const randomImageSrc = images[Math.floor(Math.random() * images.length)];
@@ -91,54 +74,44 @@
       });
 
       puzzle.shuffle();
-      puzzle.shuffleGrid();
+	    puzzle.shuffleGrid();
 
+      // 🎨 MODIFICAR EL COLOR DEL BACKGROUND
       const canvas = document.querySelector('#puzzle canvas');
       const ctx = canvas.getContext('2d');
 
-      ctx.fillStyle = '#e0e0e0';
+      // Pinta el fondo ANTES de dibujar las piezas
+      ctx.fillStyle = '#e0e0e0'; // Cambia a cualquier color que quieras
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+	  //puzzle.shuffleColumns();
       puzzle.draw();
+
       puzzle.registerKeyboardGestures();
 
-      // Actualiza la puntuación en pantalla
-      const scoreDiv = document.getElementById('score');
-
-      function getScore() {
-        // 2000 puntos si el puzzle está resuelto, sino 0
-        return (puzzle.isSolved && puzzle.isSolved()) ? 2000 : 0;
+        function getScore() {
+        return isSolved() ? 2000 : 0;
       }
 
       async function saveScore() {
-        const points = getScore();
-        if (points > 0) {
-          try {
-            await saveGameSession(token, 'RompeCabezas', points);
-            console.log(`Puntos guardados: ${points}`);
-          } catch (e) {
-            alert('Error guardando puntuación: ' + e.message);
-            if (e.message.toLowerCase().includes('unauthorized')) {
-              localStorage.clear();
-              window.location.href = '../index.html';
-            }
-          }
+      const points = getScore(); // Usa isSolved() internamente
+      try {
+        await saveGameSession(token, 'RompeCabezas', points);
+        console.log(`Puntos guardados: ${points}`);
+      } catch (e) {
+        alert('Error guardando puntuación: ' + e.message);
+        if (e.message.toLowerCase().includes('unauthorized')) {
+          localStorage.clear();
+          window.location.href = '../index.html';
         }
       }
-
-      // Función para comprobar si está resuelto periódicamente
+    }
       function checkSolved() {
         if (puzzle.isSolved && puzzle.isSolved()) {
-          alert('🎉 ¡Puzzle completado!');
-          scoreDiv.textContent = `Puntuación: ${getScore()}`;
-          saveScore();
+          alert('🎉 ¡Puzzle completado! Has ganado 2000 puntos!');
         } else {
-          // Actualiza la puntuación mostrada aunque no esté resuelto (por si quieres hacer más avanzado)
-          scoreDiv.textContent = `Puntuación: ${getScore()}`;
           setTimeout(checkSolved, 1000);
         }
       }
-
       checkSolved();
     };
   </script>
