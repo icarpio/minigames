@@ -13,28 +13,36 @@
     }
     #puzzle {
       margin-top: 50px;
+      margin-left: 130px;
       width: 600px;
       height: 600px;
     }
     #puzzle canvas {
-  background-color: #e0e0e0 !important;
-}
+      background-color: #e0e0e0 !important;
+    }
+    #reference {
+      margin-top: 5px;
+      max-width: 264px;
+      border: 1px solid #ccc;
+    }
   </style>
 </head>
 <body>
   <h1>Rompecabezas</h1>
   <div id="puzzle"></div>
+  <img id="reference" alt="Imagen de referencia">
 
   <!-- Librería headbreaker -->
   <script src="https://flbulgarelli.github.io/headbreaker/js/headbreaker.js"></script>
   <script type="module">
-     import { saveGameSession } from '../js/api.js';
+    import { saveGameSession } from '../js/api.js';
 
     const token = (localStorage.getItem('token') || '').trim();
     if (!token) {
       alert('No has iniciado sesión. Serás redirigido al login.');
       window.location.href = '../index.html';
     }
+
     const images = [
       '../assets/img/01.jpg',
       '../assets/img/02.jpg',
@@ -47,6 +55,8 @@
     ];
 
     const randomImageSrc = images[Math.floor(Math.random() * images.length)];
+    document.getElementById('reference').src = randomImageSrc; // Muestra la imagen de referencia
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.src = randomImageSrc;
@@ -56,8 +66,8 @@
       container.innerHTML = '';
 
       const puzzle = new headbreaker.Canvas('puzzle', {
-        width: 600,
-        height: 600,
+        width: 480,
+        height: 480,
         pieceSize: 60,
         image: img,
         strokeWidth: 2.5,
@@ -68,50 +78,49 @@
       puzzle.adjustImagesToPuzzleWidth();
 
       puzzle.autogenerate({
-        horizontalPiecesCount: 4,
-        verticalPiecesCount: 4,
+        horizontalPiecesCount: 5,
+        verticalPiecesCount: 5,
         insertsGenerator: headbreaker.generators.random
       });
 
       puzzle.shuffle();
-	    puzzle.shuffleGrid();
+      puzzle.shuffleGrid();
 
-      // 🎨 MODIFICAR EL COLOR DEL BACKGROUND
       const canvas = document.querySelector('#puzzle canvas');
       const ctx = canvas.getContext('2d');
-
-      // Pinta el fondo ANTES de dibujar las piezas
-      ctx.fillStyle = '#e0e0e0'; // Cambia a cualquier color que quieras
+      ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-	  //puzzle.shuffleColumns();
-      puzzle.draw();
 
+      puzzle.draw();
       puzzle.registerKeyboardGestures();
 
-        function getScore() {
+      function getScore() {
         return isSolved() ? 2000 : 0;
       }
 
       async function saveScore() {
-      const points = getScore(); // Usa isSolved() internamente
-      try {
-        await saveGameSession(token, 'RompeCabezas', points);
-        console.log(`Puntos guardados: ${points}`);
-      } catch (e) {
-        alert('Error guardando puntuación: ' + e.message);
-        if (e.message.toLowerCase().includes('unauthorized')) {
-          localStorage.clear();
-          window.location.href = '../index.html';
+        const points = getScore();
+        try {
+          await saveGameSession(token, 'RompeCabezas', points);
+          console.log(`Puntos guardados: ${points}`);
+        } catch (e) {
+          alert('Error guardando puntuación: ' + e.message);
+          if (e.message.toLowerCase().includes('unauthorized')) {
+            localStorage.clear();
+            window.location.href = '../index.html';
+          }
         }
       }
-    }
+
       function checkSolved() {
         if (puzzle.isSolved && puzzle.isSolved()) {
           alert('🎉 ¡Puzzle completado! Has ganado 2000 puntos!');
+          saveScore();
         } else {
           setTimeout(checkSolved, 1000);
         }
       }
+
       checkSolved();
     };
   </script>
