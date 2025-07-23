@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Puzzle 4x4 con Mezcla en Cuadrícula</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 20px;
+    }
+    #puzzle {
+      margin-top: 50px;
+      width: 600px;
+      height: 600px;
+    }
+    #puzzle canvas {
+  background-color: #e0e0e0 !important;
+}
+  </style>
+</head>
+<body>
+  <h1>Rompecabezas</h1>
+  <div id="puzzle"></div>
+
+  <!-- Librería headbreaker -->
+  <script src="https://flbulgarelli.github.io/headbreaker/js/headbreaker.js"></script>
+  <script>
+    const images = [
+      '../assets/img/img1.jpg',
+      '../assets/img/img2.jpg',
+      '../assets/img/img3.jpg',
+      '../assets/img/img4.jpg',
+      '../assets/img/img5.jpg',
+      '../assets/img/img6.jpg',
+      '../assets/img/img7.jpg',
+      '../assets/img/img8.jpg',
+    ];
+
+    const randomImageSrc = images[Math.floor(Math.random() * images.length)];
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = randomImageSrc;
+
+    img.onload = () => {
+      const container = document.getElementById('puzzle');
+      container.innerHTML = '';
+
+      const puzzle = new headbreaker.Canvas('puzzle', {
+        width: 600,
+        height: 600,
+        pieceSize: 60,
+        image: img,
+        strokeWidth: 2.5,
+        strokeColor: '#F0F0F0',
+        outline: new headbreaker.outline.Rounded()
+      });
+
+      puzzle.adjustImagesToPuzzleWidth();
+
+      puzzle.autogenerate({
+        horizontalPiecesCount: 6,
+        verticalPiecesCount: 6,
+        insertsGenerator: headbreaker.generators.random
+      });
+
+      puzzle.shuffle();
+	    puzzle.shuffleGrid();
+
+      // 🎨 MODIFICAR EL COLOR DEL BACKGROUND
+      const canvas = document.querySelector('#puzzle canvas');
+      const ctx = canvas.getContext('2d');
+
+      // Pinta el fondo ANTES de dibujar las piezas
+      ctx.fillStyle = '#e0e0e0'; // Cambia a cualquier color que quieras
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+	  //puzzle.shuffleColumns();
+      puzzle.draw();
+
+      puzzle.registerKeyboardGestures();
+
+      // No existe puzzle.on('puzzle-solved') - pero puedes implementar verificación manual
+
+      // Ejemplo: Verificar si puzzle está resuelto (polling)
+      function checkSolved() {
+        if (puzzle.isSolved && puzzle.isSolved()) {
+          alert('🎉 ¡Puzzle completado!');
+        } else {
+          setTimeout(checkSolved, 1000);
+        }
+      }
+
+      checkSolved();
+    };
+  </script>
+</body>
+</html>
