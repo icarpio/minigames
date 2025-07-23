@@ -1,5 +1,5 @@
 async function loadInventory() {
-  const response = await fetch('http://localhost:8000/api/inventory/', {
+  const response = await fetch('https://albertaapi.onrender.com/api/inventory/', {
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('token')
     }

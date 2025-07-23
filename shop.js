@@ -1,5 +1,5 @@
 async function fetchShopItems() {
-  const response = await fetch('http://localhost:8000/api/shop/', {
+  const response = await fetch('https://albertaapi.onrender.com/api/shop/', {
     headers: {
       'Authorization': 'Bearer ' + localStorage.getItem('token')
     }
@@ -14,7 +14,7 @@ async function fetchShopItems() {
     div.innerHTML = `
       <h3>${item.name}</h3>
       <p>Precio: ${item.price} monedas</p>
-      <img src="assets/shop/${item.image_name}" width="100" />
+      <img src="assets/img/${item.image_name}" width="100" />
       <button onclick="buyItem(${item.id})">Comprar</button>
       <hr>
     `;
@@ -23,7 +23,7 @@ async function fetchShopItems() {
 }
 
 async function buyItem(itemId) {
-  const response = await fetch('http://localhost:8000/api/buy/', {
+  const response = await fetch('https://albertaapi.onrender.com/api/buy/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

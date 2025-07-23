@@ -1,7 +1,7 @@
 async function convertPoints() {
   const points = parseInt(document.getElementById('pointsInput').value);
 
-  const response = await fetch('http://localhost:8000/api/convert/', {
+  const response = await fetch('https://albertaapi.onrender.com/api/convert/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
