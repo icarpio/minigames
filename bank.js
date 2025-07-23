@@ -9,7 +9,7 @@ async function convertPoints() {
   }
 
   try {
-    const response = await fetch('http://127.0.0.1:8000/api/convert/', {
+    const response = await fetch('https://albertaapi.onrender.com/api/convert/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

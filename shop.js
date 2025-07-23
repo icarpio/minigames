@@ -23,7 +23,7 @@ async function fetchShopItems() {
 }
 
 async function buyItem(itemId) {
-  const response = await fetch('https://albertaapi.onrender.com/api/buy/', {
+  const response = await fetch('https://albertaapi.onrender.com/minigames/buy/', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
