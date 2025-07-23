@@ -17,17 +17,41 @@
       height: 600px;
     }
     #puzzle canvas {
-  background-color: #e0e0e0 !important;
-}
+      background-color: #e0e0e0 !important;
+    }
+    #score {
+      margin-top: 20px;
+      font-size: 24px;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
   <h1>Rompecabezas</h1>
   <div id="puzzle"></div>
+  <div id="score">Puntuación: 0</div>
 
   <!-- Librería headbreaker -->
   <script src="https://flbulgarelli.github.io/headbreaker/js/headbreaker.js"></script>
+
+  <!-- Script para el puzzle y puntuación -->
   <script>
+    // Función para simular import de saveGameSession (ajusta según tu proyecto real)
+    async function saveGameSession(token, gameName, points) {
+      // Aquí iría la llamada real a tu API para guardar la puntuación
+      // Simulación:
+      return new Promise((resolve) => {
+        console.log(`Guardando juego: ${gameName} con puntos: ${points} y token: ${token}`);
+        setTimeout(resolve, 1000);
+      });
+    }
+
+    const token = (localStorage.getItem('token') || '').trim();
+    if (!token) {
+      alert('No has iniciado sesión. Serás redirigido al login.');
+      window.location.href = '../index.html';
+    }
+
     const images = [
       '../assets/img/img1.jpg',
       '../assets/img/img2.jpg',
@@ -67,27 +91,50 @@
       });
 
       puzzle.shuffle();
-	    puzzle.shuffleGrid();
+      puzzle.shuffleGrid();
 
-      // 🎨 MODIFICAR EL COLOR DEL BACKGROUND
       const canvas = document.querySelector('#puzzle canvas');
       const ctx = canvas.getContext('2d');
 
-      // Pinta el fondo ANTES de dibujar las piezas
-      ctx.fillStyle = '#e0e0e0'; // Cambia a cualquier color que quieras
+      ctx.fillStyle = '#e0e0e0';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
-	  //puzzle.shuffleColumns();
-      puzzle.draw();
 
+      puzzle.draw();
       puzzle.registerKeyboardGestures();
 
-      // No existe puzzle.on('puzzle-solved') - pero puedes implementar verificación manual
+      // Actualiza la puntuación en pantalla
+      const scoreDiv = document.getElementById('score');
 
-      // Ejemplo: Verificar si puzzle está resuelto (polling)
+      function getScore() {
+        // 2000 puntos si el puzzle está resuelto, sino 0
+        return (puzzle.isSolved && puzzle.isSolved()) ? 2000 : 0;
+      }
+
+      async function saveScore() {
+        const points = getScore();
+        if (points > 0) {
+          try {
+            await saveGameSession(token, 'RompeCabezas', points);
+            console.log(`Puntos guardados: ${points}`);
+          } catch (e) {
+            alert('Error guardando puntuación: ' + e.message);
+            if (e.message.toLowerCase().includes('unauthorized')) {
+              localStorage.clear();
+              window.location.href = '../index.html';
+            }
+          }
+        }
+      }
+
+      // Función para comprobar si está resuelto periódicamente
       function checkSolved() {
         if (puzzle.isSolved && puzzle.isSolved()) {
           alert('🎉 ¡Puzzle completado!');
+          scoreDiv.textContent = `Puntuación: ${getScore()}`;
+          saveScore();
         } else {
+          // Actualiza la puntuación mostrada aunque no esté resuelto (por si quieres hacer más avanzado)
+          scoreDiv.textContent = `Puntuación: ${getScore()}`;
           setTimeout(checkSolved, 1000);
         }
       }
