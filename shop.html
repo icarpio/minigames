@@ -1,9 +1,27 @@
 <!DOCTYPE html>
-<html>
-<head><title>Tienda</title></head>
-<body>
-  <h1>Tienda</h1>
-  <div id="shop"></div>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Tienda</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <div class="container py-5">
+    <h1 class="mb-4 text-center">Tienda</h1>
+
+    <!-- Spinner -->
+    <div id="loading" class="text-center">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2">Cargando productos de la tienda...</p>
+    </div>
+
+    <!-- Contenedor de la tienda -->
+    <div id="shop" class="row g-4"></div>
+  </div>
+
   <script src="shop.js"></script>
 </body>
 </html>
