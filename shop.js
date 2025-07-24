@@ -9,7 +9,7 @@ async function fetchShopItems() {
   }
 
   try {
-    const response = await fetch('https://albertaapi.onrender.com//api/minigames/shop/', {
+    const response = await fetch('https://albertaapi.onrender.com/api/minigames/shop/', {
       headers: {
         'Authorization': 'Token ' + token,
         'Content-Type': 'application/json'
