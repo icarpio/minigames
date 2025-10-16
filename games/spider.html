@@ -144,16 +144,23 @@
         window.location.href = "/login.html";
       }
       
-    // ✅ Detectar si es móvil
-    function isMobileDevice() {
-        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        const isSmallScreen = window.innerWidth <= 768;
-        return isTouch && isSmallScreen;
-    }
+ document.addEventListener("DOMContentLoaded", () => {
+  const mobileControls = document.getElementById('mobileControls');
 
-    if (isMobileDevice()) {
-        document.getElementById('mobileControls').style.display = 'flex';
-    }
+  function isMobileDevice() {
+    return (
+      'ontouchstart' in window ||
+      navigator.maxTouchPoints > 0 ||
+      navigator.userAgent.toLowerCase().includes('android') ||
+      navigator.userAgent.toLowerCase().includes('iphone') ||
+      navigator.userAgent.toLowerCase().includes('ipad')
+    );
+  }
+
+  if (isMobileDevice()) {
+    mobileControls.style.display = 'flex';
+  }
+});
 
       const config = {
         type: Phaser.AUTO,
