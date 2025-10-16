@@ -38,7 +38,7 @@
       }
 
       #mobileControls {
-        display: flex;
+        display: none;
         flex-direction: column;
         align-items: center;
         margin-top: 20px;
@@ -46,8 +46,8 @@
       }
 
       #mobileControls > div {
+        display: flex;
         justify-content: center;
-         display: none; /* Oculto por defecto */
       }
 
       #mobileControls button {
@@ -143,24 +143,23 @@
         alert("No has iniciado sesión. Serás redirigido al login.");
         window.location.href = "/login.html";
       }
-      
- document.addEventListener("DOMContentLoaded", () => {
-  const mobileControls = document.getElementById('mobileControls');
+        document.addEventListener("DOMContentLoaded", () => {
+        const mobileControls = document.getElementById('mobileControls');
 
-  function isMobileDevice() {
-    return (
-      'ontouchstart' in window ||
-      navigator.maxTouchPoints > 0 ||
-      navigator.userAgent.toLowerCase().includes('android') ||
-      navigator.userAgent.toLowerCase().includes('iphone') ||
-      navigator.userAgent.toLowerCase().includes('ipad')
-    );
-  }
+        function isMobileDevice() {
+            return (
+            'ontouchstart' in window ||
+            navigator.maxTouchPoints > 0 ||
+            navigator.userAgent.toLowerCase().includes('android') ||
+            navigator.userAgent.toLowerCase().includes('iphone') ||
+            navigator.userAgent.toLowerCase().includes('ipad')
+            );
+        }
 
-  if (isMobileDevice()) {
-    mobileControls.style.display = 'flex';
-  }
-});
+        if (isMobileDevice()) {
+            mobileControls.style.display = 'flex';
+        }
+        });
 
       const config = {
         type: Phaser.AUTO,
