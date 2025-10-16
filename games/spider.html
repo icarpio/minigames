@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juego Araña Phaser.js - Zonas Cerradas Corregido</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3/dist/phaser.min.js"></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: #222;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 100vh;
+        padding: 10px;
+        user-select: none;
+      }
+
+      #gameContainer {
+        border: 2px solid #fff;
+        width: 100%;
+        max-width: 640px;
+        aspect-ratio: 1 / 1; /* Mantiene proporción cuadrada */
+        position: relative;
+        z-index: 1;
+        background-color: #000;
+      }
+
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      #mobileControls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+        z-index: 10;
+      }
+
+      #mobileControls > div {
+        justify-content: center;
+         display: none; /* Oculto por defecto */
+      }
+
+      #mobileControls button {
+        width: 60px;
+        height: 60px;
+        margin: 5px;
+        font-size: 20px;
+        touch-action: manipulation;
+        -webkit-touch-callout: none;
+      }
+
+      #restartBtn,
+      #menuBtn {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 12px 24px;
+        font-size: 18px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        display: none;
+        z-index: 10;
+        box-shadow: 0 0 10px #000;
+        width: 200px;
+        text-align: center;
+      }
+
+      #restartBtn {
+        top: 50%;
+      }
+
+      #menuBtn {
+        top: calc(50% + 60px);
+        background-color: #007bff;
+      }
+      .img-small {
+        width: clamp(80px, 20vw, 150px); /* Más pequeña que antes */
+        height: auto;
+        margin: 20px 0;
+        animation: colorize 8s linear infinite;
+      }
+      @keyframes colorize {
+        0% {
+          filter: sepia(1) saturate(5) hue-rotate(0deg);
+        }
+        25% {
+          filter: sepia(1) saturate(5) hue-rotate(90deg);
+        }
+        50% {
+          filter: sepia(1) saturate(5) hue-rotate(180deg);
+        }
+        75% {
+          filter: sepia(1) saturate(5) hue-rotate(270deg);
+        }
+        100% {
+          filter: sepia(1) saturate(5) hue-rotate(360deg);
+        }
+      }
+      #scoreBoard {
+        color: white;
+        font-size: 20px;
+        margin-top: 10px;
+        font-weight: bold;
+        background: #333;
+        border-radius: 10px;
+        box-shadow: 0 0 5px #000;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/assets/img/spiderlogo.png" alt="logo" class="img-small" />
+    <div id="scoreBoard">Puntos: 0</div>
+    <div id="gameContainer"></div>
+    <div id="mobileControls">
+      <div><button id="btnUp">↑</button></div>
+      <div>
+        <button id="btnLeft">←</button>
+        <button id="btnDown">↓</button>
+        <button id="btnRight">→</button>
+      </div>
+    </div>
+    <button id="restartBtn">Reiniciar Juego</button>
+    <button id="menuBtn">Ir al Menú</button>
+
+    <script type="module">
+      import { saveGameSession } from "../js/api.js";
+
+      const token = (localStorage.getItem("token") || "").trim();
+      if (!token) {
+        alert("No has iniciado sesión. Serás redirigido al login.");
+        window.location.href = "/login.html";
+      }
+      
+    // ✅ Detectar si es móvil
+    function isMobileDevice() {
+        const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        const isSmallScreen = window.innerWidth <= 768;
+        return isTouch && isSmallScreen;
+    }
+
+    if (isMobileDevice()) {
+        document.getElementById('mobileControls').style.display = 'flex';
+    }
+
+      const config = {
+        type: Phaser.AUTO,
+        width: 640,
+        height: 640,
+        backgroundColor: "#222222",
+        physics: {
+          default: "arcade",
+        },
+        parent: "gameContainer",
+        scene: {
+          preload: preload,
+          create: create,
+          update: update,
+        },
+      };
+
+      const game = new Phaser.Game(config);
+
+      const TILE_SIZE = 32;
+      const GRID_WIDTH = 20;
+      const GRID_HEIGHT = 20;
+
+      let spider;
+      let cursors;
+      let grid = [];
+      let graphics;
+      let revealedTiles = [];
+      let image;
+      let maskGraphics;
+      let enemies = [];
+      let gameCompleted = false;
+      let level = 0;
+      const levelImages = ["level1", "level2", "level3"];
+      const TOTAL_LEVELS = levelImages.length;
+      let mobileDirection = { x: 0, y: 0 };
+
+      let currentScore = 0;
+      const enemyPoints = {
+        posa1: 100,
+        posa2: 200,
+        // Agrega más si tienes más tipos
+      };
+
+      const restartBtn = document.getElementById("restartBtn");
+      const menuBtn = document.getElementById("menuBtn");
+
+      function preload() {
+        this.load.image("spider", "../assets/img/spider.png");
+        this.load.image("hiddenImage", "../assets/img/09.jpg");
+        this.load.image("posa1", "../assets/img/posa1.png");
+        this.load.image("posa2", "../assets/img/posa2.png");
+        this.load.image("posa3", "../assets/img/posa3.png");
+        this.load.image("posa4", "../assets/img/posa4.png");
+        this.load.image("posa5", "../assets/img/posa5.png");
+        this.load.image("level1", "../assets/img/01.jpg");
+        this.load.image("level2", "../assets/img/06.jpg"); // Cambia por tus imágenes reales
+        this.load.image("level3", "../assets/img/07.jpg");
+        //this.load.image('posa3', '../assets/img/posa3.png');
+      }
+
+      function create() {
+        gameCompleted = false;
+        restartBtn.style.display = "none";
+        menuBtn.style.display = "none";
+
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          grid[y] = [];
+          for (let x = 0; x < GRID_WIDTH; x++) {
+            grid[y][x] = false;
+          }
+        }
+
+        revealedTiles = [];
+        enemies = [];
+
+        let currentLevelKey = levelImages[level % levelImages.length];
+        image = this.add.image(
+          config.width / 2,
+          config.height / 2,
+          currentLevelKey
+        );
+        image.setDisplaySize(GRID_WIDTH * TILE_SIZE, GRID_HEIGHT * TILE_SIZE);
+
+        maskGraphics = this.make.graphics();
+        maskGraphics.fillStyle(0xffffff);
+        let mask = maskGraphics.createGeometryMask();
+        image.setMask(mask);
+
+        let startX = Math.floor(GRID_WIDTH / 2);
+        let startY = Math.floor(GRID_HEIGHT / 2);
+
+        spider = this.physics.add.sprite(
+          startX * TILE_SIZE + TILE_SIZE / 2,
+          startY * TILE_SIZE + TILE_SIZE / 2,
+          "spider"
+        );
+        spider.setDepth(2);
+        spider.setDisplaySize(TILE_SIZE, TILE_SIZE);
+
+        grid[startY][startX] = true;
+        revealedTiles.push({ x: startX, y: startY });
+
+        cursors = this.input.keyboard.createCursorKeys();
+        graphics = this.add.graphics();
+
+        for (let i = 0; i < 3; i++) {
+          let ex, ey;
+          do {
+            ex = Phaser.Math.Between(0, GRID_WIDTH - 1);
+            ey = Phaser.Math.Between(0, GRID_HEIGHT - 1);
+          } while (grid[ey][ex] || (ex === startX && ey === startY));
+
+          let enemyTypes = ["posa1", "posa2"];
+          let enemyType = Phaser.Utils.Array.GetRandom(enemyTypes);
+          let enemy = this.physics.add.sprite(
+            ex * TILE_SIZE + TILE_SIZE / 2,
+            ey * TILE_SIZE + TILE_SIZE / 2,
+            enemyType
+          );
+          enemy.setDepth(1);
+          enemy.setDisplaySize(TILE_SIZE, TILE_SIZE);
+          enemy.gridX = ex;
+          enemy.gridY = ey;
+          enemies.push(enemy);
+        }
+
+        this.physics.add.overlap(spider, enemies, () => {
+          alert("¡La araña fue atrapada por un enemigo!");
+          this.scene.restart();
+        });
+
+        restartBtn.onclick = () => {
+          restartBtn.style.display = "none";
+          menuBtn.style.display = "none";
+
+          currentScore = 0; // ← aquí sí reiniciamos el puntaje
+          updateScoreText(); // y lo mostramos en pantalla
+
+          level = 0; // volver a nivel 1
+          game.scene.scenes[0].scene.restart();
+        };
+
+        menuBtn.onclick = () => {
+          window.location.href = "../home.html";
+        };
+
+        // Manejadores para controles móviles con movimiento continuo
+        document
+          .getElementById("btnUp")
+          .addEventListener(
+            "pointerdown",
+            () => (mobileDirection = { x: 0, y: -1 })
+          );
+        document
+          .getElementById("btnDown")
+          .addEventListener(
+            "pointerdown",
+            () => (mobileDirection = { x: 0, y: 1 })
+          );
+        document
+          .getElementById("btnLeft")
+          .addEventListener(
+            "pointerdown",
+            () => (mobileDirection = { x: -1, y: 0 })
+          );
+        document
+          .getElementById("btnRight")
+          .addEventListener(
+            "pointerdown",
+            () => (mobileDirection = { x: 1, y: 0 })
+          );
+
+        // Al soltar o sacar el dedo del botón, detener el movimiento
+        ["btnUp", "btnDown", "btnLeft", "btnRight"].forEach((id) => {
+          const btn = document.getElementById(id);
+          ["pointerup", "pointerout", "pointerleave", "touchend"].forEach(
+            (evt) =>
+              btn.addEventListener(
+                evt,
+                () => (mobileDirection = { x: 0, y: 0 })
+              )
+          );
+        });
+
+        updateScoreText();
+      }
+
+      let moveCooldown = 0;
+      let enemyMoveTimer = 0;
+      const ENEMY_MOVE_INTERVAL = 800;
+
+      function update(time, delta) {
+        if (gameCompleted) return;
+
+        moveCooldown -= delta;
+        enemyMoveTimer -= delta;
+
+        if (moveCooldown <= 0) {
+          let moveX = 0,
+            moveY = 0;
+
+          // Teclado
+          if (cursors.left.isDown) moveX = -1;
+          else if (cursors.right.isDown) moveX = 1;
+          if (cursors.up.isDown) moveY = -1;
+          else if (cursors.down.isDown) moveY = 1;
+
+          // Controles móviles (si están activos)
+          if (mobileDirection.x !== 0 || mobileDirection.y !== 0) {
+            moveX = mobileDirection.x;
+            moveY = mobileDirection.y;
+          }
+
+          if (moveX !== 0 || moveY !== 0) {
+            moveSpider(moveX, moveY);
+            moveCooldown = 150; // intervalo entre movimientos
+          }
+        }
+
+        if (enemyMoveTimer <= 0) {
+          enemies.forEach((enemy) => {
+            const directions = [
+              { x: -1, y: -1 },
+              { x: 0, y: -1 },
+              { x: 1, y: -1 },
+              { x: -1, y: 0 },
+              { x: 0, y: 0 },
+              { x: 1, y: 0 },
+              { x: -1, y: 1 },
+              { x: 0, y: 1 },
+              { x: 1, y: 1 },
+            ];
+
+            let validMoves = directions.filter((dir) => {
+              let nx = enemy.gridX + dir.x;
+              let ny = enemy.gridY + dir.y;
+              return (
+                nx >= 0 &&
+                nx < GRID_WIDTH &&
+                ny >= 0 &&
+                ny < GRID_HEIGHT &&
+                !grid[ny][nx]
+              );
+            });
+
+            if (validMoves.length === 0) return;
+
+            let move = Phaser.Utils.Array.GetRandom(validMoves);
+            enemy.gridX += move.x;
+            enemy.gridY += move.y;
+            enemy.x = enemy.gridX * TILE_SIZE + TILE_SIZE / 2;
+            enemy.y = enemy.gridY * TILE_SIZE + TILE_SIZE / 2;
+          });
+
+          enemyMoveTimer = ENEMY_MOVE_INTERVAL;
+        }
+
+        drawWeb();
+
+        if (isImageComplete() && !gameCompleted) {
+          gameCompleted = true;
+          this.physics.pause();
+          spider.setTint(0x00ff00);
+
+          if (level + 1 >= TOTAL_LEVELS) {
+            // Último nivel alcanzado
+            saveScore(currentScore); // guardar puntuación SOLO al final del último nivel
+            restartBtn.style.display = "block";
+            menuBtn.style.display = "block";
+          } else {
+            // Hay más niveles: pasar al siguiente automáticamente
+            level++;
+            this.time.delayedCall(1500, () => {
+              this.scene.restart();
+            });
+          }
+        }
+      }
+
+      function drawWeb() {
+        graphics.clear();
+        graphics.lineStyle(2, 0xffffff, 0.6);
+        for (let i = 0; i < revealedTiles.length; i++) {
+          let tile = revealedTiles[i];
+          for (let j = 0; j < revealedTiles.length; j++) {
+            if (i === j) continue;
+            let other = revealedTiles[j];
+            if (
+              Math.abs(tile.x - other.x) <= 1 &&
+              Math.abs(tile.y - other.y) <= 1
+            ) {
+              graphics.lineBetween(
+                tile.x * TILE_SIZE + TILE_SIZE / 2,
+                tile.y * TILE_SIZE + TILE_SIZE / 2,
+                other.x * TILE_SIZE + TILE_SIZE / 2,
+                other.y * TILE_SIZE + TILE_SIZE / 2
+              );
+            }
+          }
+        }
+      }
+
+      function updateMask() {
+        maskGraphics.clear();
+        maskGraphics.fillStyle(0xffffff);
+        for (let i = 0; i < revealedTiles.length; i++) {
+          let t = revealedTiles[i];
+          maskGraphics.fillRect(
+            t.x * TILE_SIZE,
+            t.y * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE
+          );
+        }
+      }
+      function moveSpider(dx, dy) {
+        let newGridX = Math.floor(spider.x / TILE_SIZE) + dx;
+        let newGridY = Math.floor(spider.y / TILE_SIZE) + dy;
+
+        if (
+          newGridX >= 0 &&
+          newGridX < GRID_WIDTH &&
+          newGridY >= 0 &&
+          newGridY < GRID_HEIGHT
+        ) {
+          spider.x = newGridX * TILE_SIZE + TILE_SIZE / 2;
+          spider.y = newGridY * TILE_SIZE + TILE_SIZE / 2;
+
+          if (!grid[newGridY][newGridX]) {
+            grid[newGridY][newGridX] = true;
+            revealedTiles.push({ x: newGridX, y: newGridY });
+            updateMask();
+          }
+
+          revealClosedAreas();
+        }
+      }
+
+      async function saveScore(score) {
+        try {
+          await saveGameSession(token, "Spider", score);
+          console.log("Puntuación guardada:", score);
+        } catch (e) {
+          alert("Error guardando puntuación: " + e.message);
+          if (e.message.toLowerCase().includes("unauthorized")) {
+            localStorage.clear();
+            window.location.href = "../index.html";
+          }
+        }
+      }
+
+      function isImageComplete() {
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          for (let x = 0; x < GRID_WIDTH; x++) {
+            if (!grid[y][x]) return false;
+          }
+        }
+        return true;
+      }
+
+      function revealClosedAreas() {
+        let accessible = [];
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          accessible[y] = [];
+          for (let x = 0; x < GRID_WIDTH; x++) {
+            accessible[y][x] = false;
+          }
+        }
+
+        let queue = [];
+
+        for (let x = 0; x < GRID_WIDTH; x++) {
+          if (!grid[0][x]) queue.push({ x: x, y: 0 });
+          if (!grid[GRID_HEIGHT - 1][x])
+            queue.push({ x: x, y: GRID_HEIGHT - 1 });
+        }
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          if (!grid[y][0]) queue.push({ x: 0, y: y });
+          if (!grid[y][GRID_WIDTH - 1]) queue.push({ x: GRID_WIDTH - 1, y: y });
+        }
+
+        while (queue.length > 0) {
+          let cell = queue.shift();
+          let cx = cell.x;
+          let cy = cell.y;
+
+          if (cx < 0 || cx >= GRID_WIDTH || cy < 0 || cy >= GRID_HEIGHT)
+            continue;
+          if (accessible[cy][cx]) continue;
+          if (grid[cy][cx]) continue;
+
+          accessible[cy][cx] = true;
+
+          let neighbors = [
+            { x: cx + 1, y: cy },
+            { x: cx - 1, y: cy },
+            { x: cx, y: cy + 1 },
+            { x: cx, y: cy - 1 },
+          ];
+
+          neighbors.forEach((n) => {
+            if (n.x >= 0 && n.x < GRID_WIDTH && n.y >= 0 && n.y < GRID_HEIGHT) {
+              if (!accessible[n.y][n.x] && !grid[n.y][n.x]) {
+                queue.push(n);
+              }
+            }
+          });
+        }
+
+        let newlyRevealed = [];
+
+        for (let y = 0; y < GRID_HEIGHT; y++) {
+          for (let x = 0; x < GRID_WIDTH; x++) {
+            if (!accessible[y][x] && !grid[y][x]) {
+              grid[y][x] = true;
+              newlyRevealed.push({ x: x, y: y });
+              revealedTiles.push({ x: x, y: y });
+            }
+          }
+        }
+
+        updateMask();
+        enemies = enemies.filter((enemy) => {
+          let insideNewClosed = newlyRevealed.some(
+            (cell) => cell.x === enemy.gridX && cell.y === enemy.gridY
+          );
+          if (insideNewClosed) {
+            enemy.destroy();
+
+            // Sumar puntos por enemigo atrapado
+            if (enemy.texture && enemy.texture.key in enemyPoints) {
+              currentScore += enemyPoints[enemy.texture.key];
+              updateScoreText();
+            }
+
+            return false;
+          }
+          return true;
+        });
+      }
+
+      function updateScoreText() {
+        document.getElementById(
+          "scoreBoard"
+        ).textContent = `Puntos: ${currentScore}`;
+      }
+    </script>
+  </body>
+</html>

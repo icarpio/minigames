@@ -1,4 +1,5 @@
-import { saveGameSession } from './api.js';
+import { saveGameSession } from './api.js'
+
 
 const token = (localStorage.getItem('token') || '').trim();
 if (!token) {
@@ -6,15 +7,218 @@ if (!token) {
   window.location.href = './index.html'
 }
 
-const todasLasPalabras = [
-  'HTML', 'CSS', 'JAVASCRIPT', 'PYTHON', 'REACT',
-  'ANGULAR', 'NODE', 'VUE', 'MONGO', 'SQL',
-  'LINUX', 'WINDOWS', 'ARRAY', 'OBJECT', 'STRING',
-  'NUMBER', 'BOOLEAN', 'BROWSER', 'EDITOR', 'SERVER'
-];
+
+const categorias = {
+  ciudadesDeEspana: [
+    'MADRID', 'BARCELONA', 'VALENCIA', 'SEVILLA', 'ZARAGOZA',
+    'MALAGA', 'BILBAO', 'SALAMANCA', 'TOLEDO', 'CORDOBA',
+    'BURGOS', 'OVIEDO', 'CADIZ', 'ALICANTE', 'GRANADA',
+    'MURCIA', 'PAMPLONA', 'LEON', 'VALLADOLID', 'TARRAGONA'
+  ],
+  ciudadesDeItalia: [
+    'ROMA', 'MILAN', 'VENECIA', 'NAPOLES', 'FLORENCIA',
+    'TURIN', 'GENOVA', 'PALERMO', 'SIENA', 'BOLONIA',
+    'PISA', 'VERONA', 'BARI', 'CATANIA', 'TRENTO',
+    'REGGIO', 'ANCONA', 'AREZZO', 'SALERNO', 'UDINE'
+  ],
+  comidas: [
+    'PAELLA', 'PIZZA', 'TORTILLA', 'RISOTTO', 'GAZPACHO',
+    'LASAGNA', 'EMPANADA', 'HAMBURGUESA', 'ENSALADA', 'SUSHI',
+    'CROQUETA', 'TACOS', 'FONDUE', 'BURRITO', 'PUDIN',
+    'SOUFLÉ', 'CAVIAR', 'QUICHE', 'OMELETTE', 'TAPAS'
+  ], animalesAcuaticos: [
+    'DELFIN', 'BALLENA', 'TIBURON', 'PULPO', 'MEDUSA',
+    'TRUCHA', 'ATUN', 'LANGOSTA', 'CANGREJO', 'ORCA',
+    'NARVAL', 'MERO', 'ANGUILA', 'CALAMAR', 'FOCA',
+    'MANATI', 'RAYA', 'BACALAO', 'SALMON'
+  ],
+  aves: [
+    'AGUILA', 'BUHO', 'CUERVO', 'GAVIOTA', 'FLAMENCO',
+    'COLIBRI', 'PALOMA', 'CIGUEÑA', 'PATO', 'CANARIO',
+    'PINGÜINO', 'LORO', 'AVESTRUZ', 'FAISAN', 'JILGUERO',
+    'GALLINA', 'HALCON', 'TUCAN', 'GORRION', 'CARBONERO'
+  ],
+  mamiferos: [
+    'ELEFANTE', 'TIGRE', 'LEON', 'OSO', 'CABALLO',
+    'PERRO', 'GATO', 'VACA', 'CERDO', 'CANGURO',
+    'LOBO', 'CEBRA', 'JIRAFA',
+    'MONO', 'RATA', 'ZORRO', 'ERIZO', 'BALLENA'
+  ],
+  ciudadesEuropa: [
+  'PARIS',
+  'BERLIN',
+  'VIENA',
+  'LISBOA',
+  'PRAGA',
+  'DUBLIN',
+  'OSLO',
+  'ZURICH',
+  'GINEBRA',
+  'SOFIA',
+  'ROMA',
+  'ATENAS',
+  'RIGA',
+  'TALLIN',
+  'VILNA',
+  'BLED',
+  'NAPOLES',
+  'MUNICH',
+  'BREMEN',
+  'BILBAO'
+],
+  instrumentosMusicales: [
+  'PIANO',
+  'VIOLIN',
+  'BAJO',
+  'ARPA',
+  'FLAUTA',
+  'TAMBOR',
+  'CELLO',
+  'OBOE',
+  'BANJO',
+  'DJEMBE',
+  'LIRA',
+  'BONGO',
+  'GUITARRA',
+  'SAXOFON',
+  'UKULELE',
+  'TROMBON',
+  'ZAMPOÑA',
+  'CAJON',
+  'CLAVES',
+  'CUERDA'
+],
+  deportes: [
+  'FUTBOL',
+  'TENIS',
+  'GOLF',
+  'ESQUI',
+  'BOXEO',
+  'JUDO',
+  'RUGBY',
+  'SURF',
+  'REMO',
+  'AJEDREZ',
+  'PESCA',
+  'BASQUET',
+  'HANDBOL',
+  'BMX',
+  'KARATE',
+  'LUCHA',
+  'ESGRIMA',
+  'PARKOUR',
+  'SKATE',
+  'TIRO'
+],
+ colores: [
+  'ROJO',
+  'AZUL',
+  'VERDE',
+  'NARANJA',
+  'MORADO',
+  'ROSADO',
+  'BLANCO',
+  'NEGRO',
+  'GRIS',
+  'MARRON',
+  'CELESTE',
+  'VIOLETA',
+  'DORADO',
+  'BEIGE',
+  'FUCSIA',
+  'LAVANDA',
+  'CORAL',
+  'OCRE',
+  'CARMESI',
+  'BRONCE'
+],
+  profesiones: [
+  'MEDICO',
+  'ABOGADO',
+  'MAESTRO',
+  'POLICIA',
+  'BOMBERO',
+  'CHEF',
+  'ACTOR',
+  'CANTANTE',
+  'ESCRITOR',
+  'JUEZ',
+  'GUARDA',
+  'MODELO',
+  'PINTOR',
+  'NOTARIO',
+  'FISICO',
+  'DENTISTA',
+  'LOCUTOR',
+  'BARISTA',
+  'FARMACE',
+  'COCINERO'
+],
+  elementosQuimicos: [
+    'HIERRO', 'ORO', 'COBRE', 'PLATA', 'ZINC',
+    'CLORO', 'AZUFRE', 'OXIGENO', 'HELIO', 'CARBONO',
+    'CALCIO', 'SODIO', 'BORO', 'NEON', 'LITIO',
+    'FLUOR', 'RADON', 'RADIO', 'CESIO', 'ARGON'
+  ],
+  inventos: [
+    'RUEDA', 'RADIO', 'RELOJ', 'IMAN', 'AVION',
+    'COCHE', 'CAMARA', 'LENTE', 'PLUMA', 'VACUNA',
+    'FAX', 'MOTOR', 'CELULA', 'LAMPARA', 'BOMBA',
+    'LLAVE', 'TELEFAX', 'SONAR', 'RADAR', 'HORNOS'
+  ],
+  personajesHistoricos: [
+    'PLATON', 'SOCRATES', 'DARWIN', 'TESLA', 'BOLIVAR',
+    'NEWTON', 'EINSTEIN', 'MANDELA', 'MARX', 'COLON',
+    'CAESAR', 'GALILEO', 'CICERON', 'NAPOLEON', 'JUANA',
+    'KANT', 'HOMERO', 'ARISTO', 'GANDHI', 'CURIE'
+  ],
+  marcasFamosas: [
+    'APPLE', 'SONY', 'TESLA', 'NIKE', 'ZARA',
+    'BMW', 'HONDA', 'AUDI', 'PEPSI', 'DODGE',
+    'ADIDAS', 'FORD', 'GUCCI', 'VOLVO', 'NOKIA',
+    'FIAT', 'SAMSUNG', 'TOYOTA', 'INTEL', 'HUAWEI'
+  ],
+   rios: [
+    'AMAZONAS', 'NILO', 'EBRO', 'DANUBIO', 'LOIRA',
+    'TAMESIS', 'RHIN', 'URUGUAY', 'ORINOCO', 'YANGTSE',
+    'SEINE', 'DUERO', 'LENA', 'CONGO', 'MURRAY',"ESCALDA"
+  ],
+    mitologia: [
+    'ZEUS', 'ODIN', 'RA', 'ISIS', 'HERA',
+    'ARES', 'THOR', 'LOKI', 'FREYA', 'OSIRIS',
+    'HORUS', 'POSEIDON', 'HADES', 'GAIA', 'ATENEA'
+  ],
+   pintores: [
+    'PICASSO', 'GOYA', 'DALI', 'MONET','VERMEER',
+    'VANGOGH', 'MIRÓ', 'EL GRECO', 'REMBRAND', 'KLIMT','RUBENS'
+  ],
+    frutas: [
+    'MANZANA',
+    'PERA',
+    'KIWI',
+    'MELON',
+    'UVAS',
+    'PIÑA',
+    'LIMON',
+    'CEREZA',
+    'FRESA',
+    'BANANA',
+    'MANGO',
+    'GUAYABA',
+    'CIRUELA',
+    'COCO',
+    'DURAZNO',
+    'HIGO',
+    'NECTARIN',
+    'TAMARIND',
+    'PAPAYA',
+    'CAQUI'
+  ]
+};
 
 let palabras = [];
-const gridSize = 12;
+let categoriaSeleccionada = '';
+const gridSize = 10;
 let grid = [];
 let palabrasEncontradas = 0;
 let selectedCells = [];
@@ -25,57 +229,71 @@ const mensajeElement = document.getElementById('mensaje');
 const reiniciarBtn = document.getElementById('reiniciar');
 
 function seleccionarPalabras() {
-  palabras = [...todasLasPalabras]
+  const nombresCategorias = Object.keys(categorias);
+  const indiceAleatorio = Math.floor(Math.random() * nombresCategorias.length);
+  categoriaSeleccionada = nombresCategorias[indiceAleatorio];
+
+  const lista = categorias[categoriaSeleccionada];
+
+  palabras = [...lista]
     .sort(() => 0.5 - Math.random())
-    .slice(0, 10);
+    .slice(0, 10)
+    .sort((a, b) => b.length - a.length); // ordenar de mayor a menor
 }
 
-function init() {
-  seleccionarPalabras();
-  grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
-  placeWordsInGrid();
-  fillEmptySpaces();
-  renderGrid();
-  renderWordList();
-  palabrasEncontradas = 0;
-  selectedCells = [];
-  mensajeElement.textContent = '';
-}
+const DIRECTIONS = [
+  { name: 'horizontal', dx: 1, dy: 0 },
+  { name: 'horizontal-reverse', dx: -1, dy: 0 },
+  { name: 'vertical', dx: 0, dy: 1 },
+  { name: 'vertical-reverse', dx: 0, dy: -1 },
+  { name: 'diagonal', dx: 1, dy: 1 },
+  { name: 'diagonal-reverse', dx: -1, dy: -1 },
+  { name: 'diagonal-up', dx: 1, dy: -1 },
+  { name: 'diagonal-up-reverse', dx: -1, dy: 1 }
+];
 
 function placeWordsInGrid() {
   palabras.forEach(word => {
     let placed = false;
-    while (!placed) {
-      const direction = Math.random() > 0.5 ? 'horizontal' : 'vertical';
-      const row = Math.floor(Math.random() * gridSize);
-      const col = Math.floor(Math.random() * gridSize);
+    let attempts = 0;
+    const maxAttempts = 100; // evitar bucle infinito
 
-      if (direction === 'horizontal' && col + word.length <= gridSize) {
-        if (canPlaceWord(word, row, col, direction)) {
-          for (let i = 0; i < word.length; i++) {
-            grid[row][col + i] = word[i];
-          }
-          placed = true;
+    while (!placed && attempts < maxAttempts) {
+      attempts++;
+
+      const direction = DIRECTIONS[Math.floor(Math.random() * DIRECTIONS.length)];
+      const dx = direction.dx;
+      const dy = direction.dy;
+
+      const maxRow = dy === -1 ? word.length - 1 : 0;
+      const maxCol = dx === -1 ? word.length - 1 : 0;
+
+      const row = Math.floor(Math.random() * (gridSize - Math.abs(dy * (word.length - 1)) - maxRow));
+      const col = Math.floor(Math.random() * (gridSize - Math.abs(dx * (word.length - 1)) - maxCol));
+
+      if (canPlaceWord(word, row, col, dx, dy)) {
+        for (let i = 0; i < word.length; i++) {
+          grid[row + i * dy][col + i * dx] = word[i];
         }
-      } else if (direction === 'vertical' && row + word.length <= gridSize) {
-        if (canPlaceWord(word, row, col, direction)) {
-          for (let i = 0; i < word.length; i++) {
-            grid[row + i][col] = word[i];
-          }
-          placed = true;
-        }
+        placed = true;
       }
+    }
+
+    if (!placed) {
+      console.warn(`No se pudo colocar la palabra: ${word}`);
     }
   });
 }
 
-function canPlaceWord(word, row, col, direction) {
+function canPlaceWord(word, row, col, dx, dy) {
   for (let i = 0; i < word.length; i++) {
-    if (direction === 'horizontal') {
-      if (grid[row][col + i] !== '' && grid[row][col + i] !== word[i]) return false;
-    } else {
-      if (grid[row + i][col] !== '' && grid[row + i][col] !== word[i]) return false;
-    }
+    const newRow = row + i * dy;
+    const newCol = col + i * dx;
+
+    if (newRow < 0 || newRow >= gridSize || newCol < 0 || newCol >= gridSize) return false;
+
+    const currentCell = grid[newRow][newCol];
+    if (currentCell !== '' && currentCell !== word[i]) return false;
   }
   return true;
 }
@@ -99,13 +317,32 @@ function renderGrid() {
       cellElement.textContent = cell;
       cellElement.dataset.row = rowIndex;
       cellElement.dataset.col = colIndex;
+
       cellElement.addEventListener('mousedown', () => startSelection(cellElement));
       cellElement.addEventListener('mouseenter', () => {
-        if (selectedCells.length > 0) {
-          selectCell(cellElement);
-        }
+        if (selectedCells.length > 0) selectCell(cellElement);
       });
       cellElement.addEventListener('mouseup', endSelection);
+
+      cellElement.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        startSelection(cellElement);
+      }, { passive: false });
+
+      cellElement.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const el = document.elementFromPoint(touch.clientX, touch.clientY);
+        if (el && el.dataset && el.dataset.row !== undefined && el.dataset.col !== undefined) {
+          selectCell(el);
+        }
+      }, { passive: false });
+
+      cellElement.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        endSelection();
+      }, { passive: false });
+
       sopaElement.appendChild(cellElement);
     });
   });
@@ -120,27 +357,60 @@ function renderWordList() {
   });
 }
 
+function mostrarCategoria() {
+  let categoriaElement = document.getElementById('categoria-actual');
+  if (!categoriaElement) {
+    categoriaElement = document.createElement('div');
+    categoriaElement.id = 'categoria-actual';
+    mensajeElement.parentElement.insertBefore(categoriaElement, mensajeElement);
+  }
+  categoriaElement.textContent = formatearNombreCategoria(categoriaSeleccionada);
+}
+
+function formatearNombreCategoria(nombre) {
+  return nombre.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+}
+
+let currentDirection = null;
+
 function startSelection(cellElement) {
-  selectedCells = [{ row: parseInt(cellElement.dataset.row), col: parseInt(cellElement.dataset.col) }];
+  selectedCells = [{
+    row: parseInt(cellElement.dataset.row),
+    col: parseInt(cellElement.dataset.col)
+  }];
   cellElement.classList.add('selected');
+  currentDirection = null;
 }
 
 function selectCell(cellElement) {
   const row = parseInt(cellElement.dataset.row);
   const col = parseInt(cellElement.dataset.col);
-
-  if (isAdjacent(row, col)) {
-    selectedCells.push({ row, col });
-    cellElement.classList.add('selected');
-  }
-}
-
-function isAdjacent(row, col) {
   const lastCell = selectedCells[selectedCells.length - 1];
-  const rowDiff = Math.abs(row - lastCell.row);
-  const colDiff = Math.abs(col - lastCell.col);
 
-  return (rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1);
+  const dx = col - lastCell.col;
+  const dy = row - lastCell.row;
+
+  const normDx = dx === 0 ? 0 : dx / Math.abs(dx);
+  const normDy = dy === 0 ? 0 : dy / Math.abs(dy);
+
+  if (!currentDirection && selectedCells.length === 1) {
+    if (Math.abs(dx) <= 1 && Math.abs(dy) <= 1 && !(normDx === 0 && normDy === 0)) {
+      currentDirection = { dx: normDx, dy: normDy };
+      selectedCells.push({ row, col });
+      cellElement.classList.add('selected');
+    }
+    return;
+  }
+
+  if (currentDirection) {
+    const expectedRow = lastCell.row + currentDirection.dy;
+    const expectedCol = lastCell.col + currentDirection.dx;
+
+    if (row === expectedRow && col === expectedCol) {
+      selectedCells.push({ row, col });
+      cellElement.classList.add('selected');
+    }
+  }
 }
 
 function endSelection() {
@@ -155,9 +425,10 @@ function endSelection() {
     palabras.splice(palabraIndex, 1);
     palabrasEncontradas++;
     mostrarMensaje('¡Palabra encontrada: ' + palabraSeleccionada + '!');
+
     if (palabrasEncontradas === 10) {
       mostrarMensaje('¡Felicidades! Has encontrado todas las palabras.');
-      guardarPuntuacion();
+      saveScore(500);
     }
   } else {
     mostrarMensaje('Palabra no encontrada.');
@@ -194,8 +465,23 @@ function mostrarMensaje(msg) {
   setTimeout(() => mensajeElement.textContent = '', 3000);
 }
 
+function init() {
+  reiniciarBtn.disabled = true; // evitar clics mientras se inicializa
+  seleccionarPalabras();
+  grid = Array.from({ length: gridSize }, () => Array(gridSize).fill(''));
+  placeWordsInGrid();
+  fillEmptySpaces();
+  renderGrid();
+  renderWordList();
+  palabrasEncontradas = 0;
+  selectedCells = [];
+  mensajeElement.textContent = '';
+  mostrarCategoria();
+  reiniciarBtn.disabled = false;
+}
+
 function guardarPuntuacion() {
-  const score = palabrasEncontradas * 100;
+  const score = palabrasEncontradas * 10;
   saveGameSession(token, 'Sopa de Letras', score)
     .then(() => console.log('Puntuación guardada correctamente'))
     .catch(e => {
@@ -207,6 +493,21 @@ function guardarPuntuacion() {
     });
 }
 
+async function saveScore(score) {
+  try {
+    await saveGameSession(token, "Sopa de Letras", score);
+    console.log("Puntuación guardada:", score);
+  } catch (e) {
+    alert("Error guardando puntuación: " + e.message);
+    if (e.message.toLowerCase().includes("unauthorized")) {
+      localStorage.clear();
+      window.location.href = "../index.html";
+    }
+  }
+}
+
 reiniciarBtn.addEventListener('click', init);
 
 init();
+
+
